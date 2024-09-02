@@ -1,8 +1,8 @@
 {
-  "name": "@wrtnio/studio-pro-docs",
+  "private": true,
+  "name": "@wrtnio/studio-pro-website",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "scripts": {
     "build": "rimraf .next && rimraf .out && next build && next-sitemap",
     "deploy": "node build/deploy",
@@ -11,6 +11,13 @@
   "keywords": [],
   "author": "Samchon",
   "license": "AGPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wrtnio/studio-pro"
+  },
+  "bugs": {
+    "url": "https://github.com/wrtnio/studio-pro/issues"
+  },
   "dependencies": {
     "next": "^14.2.5",
     "nextra": "^2.13.4",
