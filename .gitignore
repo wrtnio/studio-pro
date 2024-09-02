@@ -1,0 +1,6 @@
+.git/
+.next/
+node_modules/
+out/
+public/robots.txt
+public/sitemap*.xml

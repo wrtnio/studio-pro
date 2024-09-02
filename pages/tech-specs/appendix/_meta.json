@@ -1,0 +1,12 @@
+{
+  "api": {
+    "title": "⇲ API Documents",
+    "href": "/studio-pro/api/",
+    "newWindow": true
+  },
+  "swagger": {
+    "title": "⇲ Swagger UI",
+    "href": "/studio-pro/swagger/",
+    "newWindow": true
+  }
+}

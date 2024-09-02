@@ -1,0 +1,16 @@
+{
+  "index": {
+    "title": "Project Outline",
+    "type": "page",
+    "hidden": true,
+    "display": "hidden"
+  },
+  "docs": {
+    "title": "📖 Guide Documents",
+    "type": "page"
+  },
+  "tech-specs": {
+    "title": "🛠️ Technical Specifications",
+    "type": "page"
+  }
+}

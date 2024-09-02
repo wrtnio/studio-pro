@@ -1,0 +1,7 @@
+{
+  "preface": "Preface",
+  "schema": "Workflow Schema",
+  "editor": "Workflow Editor",
+  "inspector": "JSON Schema Renderer",
+  "backend": "Compiler Backend"
+}

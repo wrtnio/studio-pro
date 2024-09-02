@@ -1,0 +1,2557 @@
+import { Callout, Tabs, Tab } from 'nextra-theme-docs';
+
+## Concepts
+"Wrtn Studio Pro" has adopted OpenAPI v3.1 specified JSON schema definitions with some emendations.
+
+"Wrtn Studio Pro" is utilizng OpenAPI v3.1 specification and its following schema defining rule of ["JSON schema draft 2020-12"](https://json-schema.org/draft/2020-12/release-notes), for every schema definitions like [API marketplace sales](/tech-specs/marketplace/preface) and [Workflow Engine](/tech-specs/workflow/preface). If customer uploads a different version of OpenAPI specified JSON schema in the [API marketplace](/tech-specs/marketplace/preface), "Wrtn Studio Pro" will convert it to the JSON schema draft 2020-12 version.
+
+By the way, as JSON schema draft 2020-12 version has many synonym definitions of same meaning, "Wrtn Studio Pro" has emended the JSON schema draft 2020-12 version a little bit for clarity and consistency. Below is the list of JSON schema definitions in each OpenAPI version including the emended by "Wrtn Studio Pro".
+
+For reference, if user takes an original OpenAPI v3.1 specified document witout emendation or previous version than OpenAPI v3.1, "Wrtn Studio Pro" automatically converts it to the emended OpenAPI v3.1 version.
+
+  - [**OpenAPI v3.1 emended**](https://github.com/samchon/openapi/blob/master/src/OpenApi.ts)
+  - [OpenAPI v3.1](https://github.com/samchon/openapi/blob/master/src/OpenApiV3_1.ts)
+  - [OpenAPI v3.0](https://github.com/samchon/openapi/blob/master/src/OpenApiV3.ts)
+  - [Swagger v2.0](https://github.com/samchon/openapi/blob/master/src/SwaggerV2.ts)
+
+<Tabs items={[
+    <b>OpenAPI v3.1 (emended)</b>,
+    "OpenAPI v3.1",
+    "OpenAPI v3.0",
+    "Swagger v2.0"
+  ]}>
+  <Tab>
+```typescript filename="@samchon/openapi" showLineNumbers {2-14}
+export namespace OpenApi {
+  export type IJsonSchema =
+    | IJsonSchema.IConstant
+    | IJsonSchema.IBoolean
+    | IJsonSchema.IInteger
+    | IJsonSchema.INumber
+    | IJsonSchema.IString
+    | IJsonSchema.IArray
+    | IJsonSchema.ITuple
+    | IJsonSchema.IObject
+    | IJsonSchema.IReference
+    | IJsonSchema.IOneOf
+    | IJsonSchema.INull
+    | IJsonSchema.IUnknown;
+  export namespace IJsonSchema {
+    export interface IConstant extends __IAttribute {
+      const: boolean | number | string;
+    }
+    export interface IBoolean extends __ISignificant<"boolean"> {
+      default?: boolean;
+    }
+    export interface IInteger extends __ISignificant<"integer"> {
+      /** @type int64 */ default?: number;
+      /** @type int64 */ minimum?: number;
+      /** @type int64 */ maximum?: number;
+      exclusiveMinimum?: boolean;
+      exclusiveMaximum?: boolean;
+      /**
+       * @type uint64
+       * @exclusiveMinimum 0
+       */
+      multipleOf?: number;
+    }
+    export interface INumber extends __ISignificant<"number"> {
+      default?: number;
+      minimum?: number;
+      maximum?: number;
+      exclusiveMinimum?: boolean;
+      exclusiveMaximum?: boolean;
+      /** @exclusiveMinimum 0 */ multipleOf?: number;
+    }
+    export interface IString extends __ISignificant<"string"> {
+      default?: string;
+      format?:
+        | "binary"
+        | "byte"
+        | "password"
+        | "regex"
+        | "uuid"
+        | "email"
+        | "hostname"
+        | "idn-email"
+        | "idn-hostname"
+        | "iri"
+        | "iri-reference"
+        | "ipv4"
+        | "ipv6"
+        | "uri"
+        | "uri-reference"
+        | "uri-template"
+        | "url"
+        | "date-time"
+        | "date"
+        | "time"
+        | "duration"
+        | "json-pointer"
+        | "relative-json-pointer"
+        | (string & {});
+      pattern?: string;
+      contentMediaType?: string;
+      /** @type uint64 */ minLength?: number;
+      /** @type uint64 */ maxLength?: number;
+    }
+
+    export interface IArray<Schema extends IJsonSchema = IJsonSchema>
+      extends __ISignificant<"array"> {
+      items: Schema;
+      uniqueItems?: boolean;
+      /** @type uint64 */ minItems?: number;
+      /** @type uint64 */ maxItems?: number;
+    }
+    export interface ITuple<Schema extends IJsonSchema = IJsonSchema>
+      extends __ISignificant<"array"> {
+      prefixItems: Schema[];
+      additionalItems?: boolean | Schema;
+      uniqueItems?: boolean;
+      /** @type uint64 */ minItems?: number;
+      /** @type uint64 */ maxItems?: number;
+    }
+    export interface IObject<Schema extends IJsonSchema = IJsonSchema>
+      extends __ISignificant<"object"> {
+      properties?: Record<string, Schema>;
+      additionalProperties?: boolean | Schema;
+      required?: string[];
+    }
+
+    export interface IReference<Key = string> extends __IAttribute {
+      $ref: Key;
+    }
+    export interface IOneOf<Schema extends IJsonSchema = IJsonSchema>
+      extends __IAttribute {
+      oneOf: Exclude<Schema, IJsonSchema.IOneOf>[];
+      discriminator?: IOneOf.IDiscriminator;
+    }
+    export namespace IOneOf {
+      export interface IDiscriminator {
+        propertyName: string;
+        mapping?: Record<string, string>;
+      }
+    }
+    export interface INull extends __ISignificant<"null"> {
+      default?: null;
+    }
+    export interface IUnknown extends __IAttribute {
+      type?: undefined;
+    }
+
+    export interface __ISignificant<Type extends string> extends __IAttribute {
+      type: Type;
+    }
+    export interface __IAttribute {
+      title?: string;
+      description?: string;
+      deprecated?: boolean;
+    }
+  }
+}
+```
+  </Tab>
+  <Tab>
+```typescript filename="@samchon/openapi" showLineNumbers {3, 12, 14, 15, 19-34, 41, 45, 58, 103-108, 138-140, 144}
+export namespace OpenApiV3_1 {
+  export type IJsonSchema =
+    | IJsonSchema.IMixed
+    | IJsonSchema.IConstant
+    | IJsonSchema.IBoolean
+    | IJsonSchema.IInteger
+    | IJsonSchema.INumber
+    | IJsonSchema.IString
+    | IJsonSchema.IArray
+    | IJsonSchema.IObject
+    | IJsonSchema.IReference
+    | IJsonSchema.IRecursiveReference
+    | IJsonSchema.IUnknown
+    | IJsonSchema.INull
+    | IJsonSchema.IAllOf
+    | IJsonSchema.IAnyOf
+    | IJsonSchema.IOneOf;
+  export namespace IJsonSchema {
+    export interface IMixed
+      extends IConstant,
+        Omit<IBoolean, "type" | "default" | "enum">,
+        Omit<INumber, "type" | "default" | "enum">,
+        Omit<IString, "type" | "default" | "enum">,
+        Omit<IArray, "type">,
+        Omit<IObject, "type">,
+        IOneOf,
+        IAnyOf,
+        IAllOf {
+      type: Array<
+        "boolean" | "integer" | "number" | "string" | "array" | "object"
+      >;
+      default?: any[];
+      enum?: any[];
+    }
+
+    export interface IConstant extends __IAttribute {
+      const: boolean | number | string;
+    }
+    export interface IBoolean extends __ISignificant<"boolean"> {
+      default?: boolean | null;
+      enum?: Array<boolean | null>;
+    }
+    export interface IInteger extends __ISignificant<"integer"> {
+      /** @type int64 */ default?: number | null;
+      /** @type int64 */ enum?: Array<number | null>;
+      /** @type int64 */ minimum?: number;
+      /** @type int64 */ maximum?: number;
+      /** @type int64 */ exclusiveMinimum?: number | boolean;
+      /** @type int64 */ exclusiveMaximum?: number | boolean;
+      /**
+       * @type uint64
+       * @exclusiveMinimum 0
+       */
+      multipleOf?: number;
+    }
+    export interface INumber extends __ISignificant<"number"> {
+      default?: number | null;
+      enum?: Array<number | null>;
+      minimum?: number;
+      maximum?: number;
+      exclusiveMinimum?: number | boolean;
+      exclusiveMaximum?: number | boolean;
+      /** @exclusiveMinimum 0 */ multipleOf?: number;
+    }
+    export interface IString extends __ISignificant<"string"> {
+      contentMediaType?: string;
+      default?: string | null;
+      enum?: Array<string | null>;
+      format?:
+        | "binary"
+        | "byte"
+        | "password"
+        | "regex"
+        | "uuid"
+        | "email"
+        | "hostname"
+        | "idn-email"
+        | "idn-hostname"
+        | "iri"
+        | "iri-reference"
+        | "ipv4"
+        | "ipv6"
+        | "uri"
+        | "uri-reference"
+        | "uri-template"
+        | "url"
+        | "date-time"
+        | "date"
+        | "time"
+        | "duration"
+        | "json-pointer"
+        | "relative-json-pointer"
+        | (string & {});
+      pattern?: string;
+      /** @type uint64 */ minLength?: number;
+      /** @type uint64 */ maxLength?: number;
+    }
+
+    export interface IUnknown extends __IAttribute {
+      type?: undefined;
+    }
+    export interface INull extends __ISignificant<"null"> {
+      default?: null;
+    }
+    export interface IAllOf extends __IAttribute {
+      allOf: IJsonSchema[];
+    }
+    export interface IAnyOf extends __IAttribute {
+      anyOf: IJsonSchema[];
+    }
+    export interface IOneOf extends __IAttribute {
+      oneOf: IJsonSchema[];
+      discriminator?: IOneOf.IDiscriminator;
+    }
+    export namespace IOneOf {
+      export interface IDiscriminator {
+        propertyName: string;
+        mapping?: Record<string, string>;
+      }
+    }
+
+    export interface IArray extends __ISignificant<"array"> {
+      items: IJsonSchema | IJsonSchema[];
+      prefixItems?: IJsonSchema[];
+      uniqueItems?: boolean;
+      additionalItems?: boolean | IJsonSchema;
+      /** @type uint64 */ minItems?: number;
+      /** @type uint64 */ maxItems?: number;
+    }
+    export interface IObject extends __ISignificant<"object"> {
+      properties?: Record<string, IJsonSchema>;
+      required?: string[];
+      additionalProperties?: boolean | IJsonSchema;
+      maxProperties?: number;
+      minProperties?: number;
+    }
+    export interface IReference<Key = string> extends __IAttribute {
+      $ref: Key;
+    }
+    export interface IRecursiveReference extends __IAttribute {
+      $recursiveRef: string;
+    }
+
+    export interface __ISignificant<Type extends string> extends __IAttribute {
+      type: Type;
+      nullable?: boolean;
+    }
+    export interface __IAttribute {
+      title?: string;
+      description?: string;
+      deprecated?: boolean;
+    }
+  }
+}
+```
+  </Tab>
+  <Tab>
+```typescript filename="OpenApiV3.ts" showLineNumbers {12-13, 18, 22, 35, 44, 98-103, 117}
+export namespace OpenApiV3 {
+  export type IJsonSchema =
+    | IJsonSchema.IBoolean
+    | IJsonSchema.IInteger
+    | IJsonSchema.INumber
+    | IJsonSchema.IString
+    | IJsonSchema.IArray
+    | IJsonSchema.IObject
+    | IJsonSchema.IReference
+    | IJsonSchema.IUnknown
+    | IJsonSchema.INullOnly
+    | IJsonSchema.IAllOf
+    | IJsonSchema.IAnyOf
+    | IJsonSchema.IOneOf;
+  export namespace IJsonSchema {
+    export interface IBoolean extends __ISignificant<"boolean"> {
+      default?: boolean | null;
+      enum?: Array<boolean | null>;
+    }
+    export interface IInteger extends __ISignificant<"integer"> {
+      /** @type int64 */ default?: number | null;
+      /** @type int64 */ enum?: Array<number | null>;
+      /** @type int64 */ minimum?: number;
+      /** @type int64 */ maximum?: number;
+      exclusiveMinimum?: boolean;
+      exclusiveMaximum?: boolean;
+      /**
+       * @type uint64
+       * @exclusiveMinimum 0
+       */
+      multipleOf?: number;
+    }
+    export interface INumber extends __ISignificant<"number"> {
+      default?: number | null;
+      enum?: Array<number | null>;
+      minimum?: number;
+      maximum?: number;
+      exclusiveMinimum?: boolean;
+      exclusiveMaximum?: boolean;
+      /** @exclusiveMinimum 0 */ multipleOf?: number;
+    }
+    export interface IString extends __ISignificant<"string"> {
+      default?: string | null;
+      enum?: string[];
+      format?:
+        | "binary"
+        | "byte"
+        | "password"
+        | "regex"
+        | "uuid"
+        | "email"
+        | "hostname"
+        | "idn-email"
+        | "idn-hostname"
+        | "iri"
+        | "iri-reference"
+        | "ipv4"
+        | "ipv6"
+        | "uri"
+        | "uri-reference"
+        | "uri-template"
+        | "url"
+        | "date-time"
+        | "date"
+        | "time"
+        | "duration"
+        | "json-pointer"
+        | "relative-json-pointer"
+        | (string & {});
+      pattern?: string;
+      /** @type uint64 */ minLength?: number;
+      /** @type uint64 */ maxLength?: number;
+    }
+
+    export interface IArray extends __ISignificant<"array"> {
+      items: IJsonSchema;
+      uniqueItems?: boolean;
+      /** @type uint64 */ minItems?: number;
+      /** @type uint64 */ maxItems?: number;
+    }
+    export interface IObject extends __ISignificant<"object"> {
+      properties?: Record<string, IJsonSchema>;
+      required?: string[];
+      additionalProperties?: boolean | IJsonSchema;
+      maxProperties?: number;
+      minProperties?: number;
+    }
+    export interface IReference<Key = string> extends __IAttribute {
+      $ref: Key;
+    }
+
+    export interface IUnknown extends __IAttribute {
+      type?: undefined;
+    }
+    export interface INullOnly extends __IAttribute {
+      type: "null";
+    }
+    export interface IAllOf extends __IAttribute {
+      allOf: IJsonSchema[];
+    }
+    export interface IAnyOf extends __IAttribute {
+      anyOf: IJsonSchema[];
+    }
+    export interface IOneOf extends __IAttribute {
+      oneOf: IJsonSchema[];
+      discriminator?: IOneOf.IDiscriminator;
+    }
+    export namespace IOneOf {
+      export interface IDiscriminator {
+        propertyName: string;
+        mapping?: Record<string, string>;
+      }
+    }
+
+    export interface __ISignificant<Type extends string> extends __IAttribute {
+      type: Type;
+      nullable?: boolean;
+    }
+    export interface __IAttribute {
+      title?: string;
+      description?: string;
+      deprecated?: boolean;
+    }
+  }
+}
+```
+  </Tab>
+  <Tab>
+```typescript filename="SwaggerV2.ts" showLineNumbers {12-13, 18, 22, 35, 44, 98-103, 110}
+export namespace SwaggerV2 {
+  export type IJsonSchema =
+    | IJsonSchema.IBoolean
+    | IJsonSchema.IInteger
+    | IJsonSchema.INumber
+    | IJsonSchema.IString
+    | IJsonSchema.IArray
+    | IJsonSchema.IObject
+    | IJsonSchema.IReference
+    | IJsonSchema.IUnknown
+    | IJsonSchema.INullOnly
+    | IJsonSchema.IAllOf
+    | IJsonSchema.IAnyOf
+    | IJsonSchema.IOneOf;
+  export namespace IJsonSchema {
+    export interface IBoolean extends __ISignificant<"boolean"> {
+      default?: boolean | null;
+      enum?: Array<boolean | null>;
+    }
+    export interface IInteger extends __ISignificant<"integer"> {
+      /** @type int64 */ default?: number | null;
+      /** @type int64 */ enum?: Array<number | null>;
+      /** @type int64 */ minimum?: number;
+      /** @type int64 */ maximum?: number;
+      exclusiveMinimum?: boolean;
+      exclusiveMaximum?: boolean;
+      /**
+       * @type uint64
+       * @exclusiveMinimum 0
+       */
+      multipleOf?: number;
+    }
+    export interface INumber extends __ISignificant<"number"> {
+      default?: number | null;
+      enum?: Array<number | null>;
+      minimum?: number;
+      maximum?: number;
+      exclusiveMinimum?: boolean;
+      exclusiveMaximum?: boolean;
+      /** @exclusiveMinimum 0 */ multipleOf?: number;
+    }
+    export interface IString extends __ISignificant<"string"> {
+      default?: string | null;
+      enum?: Array<string | null>;
+      format?:
+        | "binary"
+        | "byte"
+        | "password"
+        | "regex"
+        | "uuid"
+        | "email"
+        | "hostname"
+        | "idn-email"
+        | "idn-hostname"
+        | "iri"
+        | "iri-reference"
+        | "ipv4"
+        | "ipv6"
+        | "uri"
+        | "uri-reference"
+        | "uri-template"
+        | "url"
+        | "date-time"
+        | "date"
+        | "time"
+        | "duration"
+        | "json-pointer"
+        | "relative-json-pointer"
+        | (string & {});
+      pattern?: string;
+      /** @type uint64 */ minLength?: number;
+      /** @type uint64 */ maxLength?: number;
+    }
+
+    export interface IArray extends __ISignificant<"array"> {
+      items: IJsonSchema;
+      uniqueItems?: boolean;
+      /** @type uint64 */ minItems?: number;
+      /** @type uint64 */ maxItems?: number;
+    }
+    export interface IObject extends __ISignificant<"object"> {
+      properties?: Record<string, IJsonSchema>;
+      required?: string[];
+      additionalProperties?: boolean | IJsonSchema;
+      maxProperties?: number;
+      minProperties?: number;
+    }
+    export interface IReference<Key = string> extends __IAttribute {
+      $ref: Key;
+    }
+
+    export interface IUnknown extends __IAttribute {
+      type?: undefined;
+    }
+    export interface INullOnly extends __IAttribute {
+      type: "null";
+    }
+    export interface IAllOf extends __IAttribute {
+      allOf: IJsonSchema[];
+    }
+    export interface IAnyOf extends __IAttribute {
+      "x-anyOf": IJsonSchema[];
+    }
+    export interface IOneOf extends __IAttribute {
+      "x-oneOf": IJsonSchema[];
+    }
+
+    export interface __ISignificant<Type extends string> extends __IAttribute {
+      type: Type;
+      "x-nullable"?: boolean;
+    }
+    export interface __IAttribute {
+      title?: string;
+      description?: string;
+      deprecated?: boolean;
+    }
+  }
+}
+```
+  </Tab>
+</Tabs>
+
+
+
+
+## Definitions
+### Common Properties
+```typescript filename="@samchon/openapi" showLineNumbers
+export namespace OpenApi {
+  export namespace IJsonSchema {
+    /**
+     * Common attributes that can be applied to all types.
+     */
+    export interface __IAttribute {
+      /**
+       * Representative title of the schema.
+       */
+      title?: string;
+
+      /**
+       * Detailed description of the schema.
+       * 
+       * Very important for LLM (Large Language Model) function calling.
+       */
+      description?: string;
+
+      /**
+       * Whether the type is deprecated or not.
+       */
+      deprecated?: boolean;
+    }
+  }
+}
+```
+
+Every JSON schema definitions have the following common properties.
+
+The first `title` is the representative name of the schema, and the meaning "representative" is powerful even some OpenAPI (swagger) document viewers are replacing the parameter/property/variable name to the `title` assigned value.
+
+The other `description` is the detailed explanation of the schema. In the OpenAPI (swagger) document viewer level, the `title` is a little bit important than `description`, but in the LLM (Large Language Model) function calling level, it is something different. As the `description` property is used for describing the schema in detail to LLM agent, the `description` proeprty is very important with its original type info.
+
+The last `deprecated` is used to mark the schema as deprecated. If the schema is marked as deprecated, the schema is not recommended to use anymore. The schema is still valid so that no problem would be right now, but the `@deprecated` means that the API provider will remove it soon, so that would not work in the future.
+
+### Atomic Types
+#### `Constant`
+<Tabs items={[
+    "OpenAPI Specification",
+    "Demonstration Code"
+  ]}>
+  <Tab>
+```typescript filename="@samchon/openapi" showLineNumbers
+export namespace OpenApi {
+  export namespace IJsonSchema {
+    /**
+     * Constant value type.
+     */
+    export interface IConstant {
+      /**
+       * The constant value.
+       */
+      const: boolean | number | string;
+
+      /**
+       * Representative title of the schema.
+       */
+      title?: string;
+
+      /**
+       * Detailed description of the schema.
+       * 
+       * Very important for LLM (Large Language Model) function calling.
+       */
+      description?: string;
+
+      /**
+       * Whether the type is deprecated or not.
+       */
+      deprecated?: boolean;
+    }
+  }
+}
+```
+  </Tab>
+  <Tab>
+```typescript filename="demo/demo_json_schema_constant.ts" showLineNumbers
+import typia from "typia";
+
+const enum State {
+  NONE = 0,
+  CONNECTING = 1,
+  CLOSING = 2,
+  REJECTING = 3,
+  CONNECTED = 4,
+  CLOSED = 5,
+}
+
+typia.json.application<[
+  "one" | "two" | "three",
+  State
+]>();
+  //{
+  //  version: "3.1",
+  //  components: {
+  //    schemas: {
+  //      State: {
+  //        oneOf: [
+  //          {
+  //            const: 0,
+  //            description: "Did nothing yet",
+  //          },
+  //          {
+  //            const: 1,
+  //            description: "Connecting to the server",
+  //          },
+  //          {
+  //            const: 2,
+  //            description: "Closing the connection",
+  //          },
+  //          {
+  //            const: 3,
+  //            description: "Connection is alive",
+  //          },
+  //          {
+  //            const: 4,
+  //            description: "Connection has been closed",
+  //          },
+  //        ],
+  //      },
+  //    },
+  //  },
+  //  schemas: [
+  //    {
+  //      oneOf: [
+  //        { const: "one" },
+  //        { const: "two" },
+  //        { const: "three" },
+  //      ],
+  //    },
+  //    { $ref: "#/components/schemas/State" },
+  //  ],
+  //}
+```
+  </Tab>
+</Tabs>
+
+> [💻 Playground Link](https://typia.io/playground/?script=JYWwDg9gTgLgBDAnmYBDOAzKERwERIqp4DcAUGQMYQB2AzvAKY0CuuAyjKjI3AN5k4cAPQAqUYKGi4AEWAATODQgwAFsBoBzOIkYxJcUcMkA5APImAonAC8cAAwAaCkLEShhuAGFaNRpRgNbRgIBFVeOkYoADcogyNJLwsrLwAVAEkTAHFbOABGZ0k3eO8AGwg6ILDeaho-AOBaeOMhLwAZM3ZMnLsAJkLXcRKfOv9A2jhgOjhUUuBY5sTkyzTLGVyAZgGRIY9pEfrxmjhVVGmAI0ZmOEpyyPlF1o72NdyAFmcAXwpaughSxgAOnKmgAFJJCGhAQArP40QGoMBgOaUbiNGgAHgA2gZ8LRGHg4AAffAwADuEEJJIIqigVzwzg8cE43EYkgAugA+UEASmcPKAA)
+
+In the JSON schema definition, the `Constant` type is used for representing a constant literal value. 
+
+The constant literal value means that the value is always fixed and never changes. In the TypeScript, the constant literal value type is defined like below. As you can see, the constant literal values `false`, `1`, and `"two"` are always fixed and never changed, so that assigned to the `const` property of the JSON schema.
+
+#### `Boolean`
+<Tabs items={[
+    "OpenAPI Specification",
+    "Demonstration Code"
+  ]}>
+  <Tab>
+```typescript filename="@samchon/openapi" showLineNumbers
+export namespace OpenApi {
+  export namespace IJsonSchema {
+    /**
+     * Constant value type.
+     */
+    export interface IBoolean {
+      /**
+       * Discriminator value of the type.
+       */
+      type: "boolean";
+
+      /**
+       * The default value.
+       */
+      default?: boolean;
+
+      /**
+       * Representative title of the schema.
+       */
+      title?: string;
+
+      /**
+       * Detailed description of the schema.
+       * 
+       * Very important for LLM (Large Language Model) function calling.
+       */
+      description?: string;
+
+      /**
+       * Whether the type is deprecated or not.
+       */
+      deprecated?: boolean;
+    }
+  }
+}
+```
+  </Tab>
+  <Tab>
+```typescript
+import typia, { tags } from "typia";
+
+typia.json.application<[
+  boolean & tags.Default<false>
+]>();
+  // {
+  //   type: "boolean",
+  //   default: false,
+  // }
+```
+  </Tab>
+</Tabs>
+
+> ![💻 Playground Link](https://typia.io/playground/?script=JYWwDg9gTgLgBDAnmYBDANHA3g1BzAZzgF84AzKCEOAIiRVRoG4AoFgYwgDsCIAbAKYA6PhDwAKFnATI0QgFa8uQ1GDB9g7VDGDcAPAG0p0uACMI-Aai5wAZLkJCAIgLKoArnxh63fAgIA+YwBdAPEASnQWcKYgA)
+
+In the JSON schema definition, the `boolean` type is expressed as above.
+
+Different with the previous [`Constant`](#constant) type, the `boolean` type has a special property `default`, which is used for representing the default value for the schema. The `default` value is used when the schema value is not assigned by the user.
+
+#### `Integer`
+<Tabs items={[
+    "OpenAPI Specification",
+    "Demonstration Code"
+  ]}>
+  <Tab>
+```typescript filename="@samchon/openapi" showLineNumbers
+export namespace OpenApi {
+  export namespace IJsonSchema {
+    /**
+     * Integer type info.
+     */
+    export interface IInteger {
+      /**
+       * Discriminator value of the type.
+       */
+      type: "integer";
+
+      /**
+       * Minimum value restriction.
+       *
+       * @type int64
+       */
+      minimum?: number;
+
+      /**
+       * Maximum value restriction.
+       *
+       * @type int64
+       */
+      maximum?: number;
+
+      /**
+       * Exclusive minimum value restriction.
+       *
+       * For reference, even though your Swagger (or OpenAPI) document has
+       * defined the `exclusiveMinimum` value as `number`, {@link OpenApi}
+       * forcibly converts it to `boolean` type, and assign the numeric value to
+       * the {@link minimum} property.
+       * 
+       * @default false
+       */
+      exclusiveMinimum?: boolean;
+
+      /**
+       * Exclusive maximum value restriction.
+       *
+       * For reference, even though your Swagger (or OpenAPI) document has
+       * defined the `exclusiveMaximum` value as `number`, {@link OpenApi}
+       * forcibly converts it to `boolean` type, and assign the numeric value to
+       * the {@link maximum} property.
+       * 
+       * @default false
+       */
+      exclusiveMaximum?: boolean;
+
+      /**
+       * Multiple of value restriction.
+       *
+       * @type uint64
+       * @exclusiveMinimum 0
+       */
+      multipleOf?: number;
+
+      /**
+       * Default value.
+       *
+       * @type int64
+       */
+      default?: number;
+
+      /**
+       * Representative title of the schema.
+       */
+      title?: string;
+
+      /**
+       * Detailed description of the schema.
+       * 
+       * Very important for LLM (Large Language Model) function calling.
+       */
+      description?: string;
+
+      /**
+       * Whether the type is deprecated or not.
+       */
+      deprecated?: boolean;
+    }
+  }
+}
+```
+  </Tab>
+  <Tab>
+```typescript filename="demo/demo_json_schema_integer.ts" showLineNumbers
+import typia, { tags } from "typia";
+
+console.log(
+  typia.json.application<[
+    number & tags.Type<"uint32"> & tags.Minimum<100>,
+  ]>(),
+  typia.createIs<number & tags.Type<"uint32"> & tags.Minimum<100>>(),
+);
+// {
+//   type: "integer",
+//   minimum: 100,
+// }
+//-----------------------
+// (input) => {
+//   return (
+//     "number" === typeof input &&
+//     Math.floor(input) === input &&
+//     -2147483648 <= input &&
+//     100 <= input
+//   );
+// }
+```
+  </Tab>
+</Tabs>
+
+> [💻 Playground Link](https://typia.io/playground/?script=JYWwDg9gTgLgBDAnmYBDANHA3g1BzAZzgF84AzKCEOAIiRVRoG4AoFgYwgDsCIAbAKYA6PhDwAKFnATI0QgFa8uQ1GDB9g7VDGDcAPAG0p0uFwCuIAEYCocAGS5CQgCrIBemmeBcYAZgBMNAB89o4EQgCy3qAWegCMAAwJQejGALpB4gCUqdL0cuxQAtoCAJIEeuZWNqEw+OGuYO6e3n6BIQ51TlFcMSDxSUGZOSxZTEA)
+
+In the JSON schema definition, the `integer` type is expressed as above.
+
+Unlike above `boolean` type is, the `integer` type has additional restriction properties. 
+
+At first, `multipleOf` means the value must be multiple of the assigned value. Therefore, if you assign an integer value to the `multipleOf` restricted type, your integer value must be possible to divid by the `multipleOf` value without any remainder.
+
+The other, `minimum` and `maximum` are the range restriction properties, and `exclusiveMinimum` and `exclusiveMaximum` are helper properties describing whether the `minimum` and `maximum` restrictions are prohibiting equal value or not. As default value of `exclusiveMinimum` and `exclusiveMaximum` are `false`, if only `minimum` or `maximum` is assigned, the value is allowed to be equal to the `minimum` or `maximum` value.
+
+```bash
+x >= 0 // { minimum: 0, exclusiveMinimum: false }
+y < 10 // { maximum: 10, exclusiveMaximum: true }
+```
+
+#### `Number`
+<Tabs items={[
+    "OpenAPI Specification",
+    "Demonstration Code"
+  ]}>
+  <Tab>
+```typescript filename="@samchon/openapi" showLineNumbers
+export namespace OpenApi {
+  export namespace IJsonSchema {
+    /**
+     * Number (double) type info.
+     */
+    export interface INumber {
+      /**
+       * Discriminator value of the type.
+       */
+      type: "number";
+
+      /**
+       * Minimum value restriction.
+       */
+      minimum?: number;
+
+      /**
+       * Maximum value restriction.
+       */
+      maximum?: number;
+
+      /**
+       * Exclusive minimum value restriction.
+       *
+       * For reference, even though your Swagger (or OpenAPI) document has
+       * defined the `exclusiveMinimum` value as `number`, {@link OpenAiComposer}
+       * forcibly converts it to `boolean` type, and assign the numeric value to
+       * the {@link minimum} property.
+       */
+      exclusiveMinimum?: boolean;
+
+      /**
+       * Exclusive maximum value restriction.
+       *
+       * For reference, even though your Swagger (or OpenAPI) document has
+       * defined the `exclusiveMaximum` value as `number`, {@link OpenAiComposer}
+       * forcibly converts it to `boolean` type, and assign the numeric value to
+       * the {@link maximum} property.
+       */
+      exclusiveMaximum?: boolean;
+
+      /**
+       * Multiple of value restriction.
+       *
+       * @exclusiveMinimum 0
+       */
+      multipleOf?: number;
+
+      /**
+       * Default value.
+       */
+      default?: number;
+
+      /**
+       * Representative title of the schema.
+       */
+      title?: string;
+
+      /**
+       * Detailed description of the schema.
+       * 
+       * Very important for LLM (Large Language Model) function calling.
+       */
+      description?: string;
+
+      /**
+       * Whether the type is deprecated or not.
+       */
+      deprecated?: boolean;
+    }
+  }
+}
+```
+  </Tab>
+  <Tab>
+```typescript filename="demo/demo_json_schema_number.ts" showLineNumbers
+import typia, { tags } from "typia";
+
+console.log(
+  typia.json.application<[
+    number & tags.MultipleOf<5.5>,
+  ]>(),
+  typia.createIs<number & tags.MultipleOf<5.5>>(),
+);
+  // {
+  //   type: "number",
+  //   multipleOf: 5.5,
+  // }
+  //-----------------------
+  // (input) => {
+  //   return "number" === typeof input && input % 5.5 === 0;
+  // }
+```
+  </Tab>
+</Tabs>
+
+> [💻 Playground Link](https://typia.io/playground/?script=JYWwDg9gTgLgBDAnmYBDANHA3g1BzAZzgF84AzKCEOAIiRVRoG4AoFgYwgDsCIAbAKYA6PhDwAKFnATI0QgFa8uQ1GDB9g7VDGDcAPAG0p0uFwCuIAEYCocAGS5CQgLJm+O9QIDyZPQFYhPwA+dGMAXSDxAEpQ6Xo5digBbQEASQI9cysbe0cCFzcPQR9-QKDImJYopiA)
+
+In the JSON schema definition, the `number` type is expressed as above.
+
+Only one thing different with `number` and `integer` type is, whether to allow the decimal point or not. The `number` type allows the decimal point, but the `integer` type does not allow the decimal point. Therefore, member properties of `number` type are exactly same with `integer` type.
+
+>> Description in the `integer` type is also applied to the `number` type.
+>
+> At first, `multipleOf` means the value must be multiple of the assigned value. Therefore, if you assign an integer value to the `multipleOf` restricted type, your integer value must be possible to divid by the `multipleOf` value without any remainder.
+>
+> The other, `minimum` and `maximum` are the range restriction properties, and `exclusiveMinimum` and `exclusiveMaximum` are helper properties describing whether the `minimum` and `maximum` restrictions are prohibiting equal value or not. As default value of `exclusiveMinimum` and `exclusiveMaximum` are `false`, if only `minimum` or `maximum` is assigned, the value is allowed to be equal to the `minimum` or `maximum` value.
+>
+> ```bash
+> x >= 0 // { minimum: 0, exclusiveMinimum: false }
+> y < 10 // { maximum: 10, exclusiveMaximum: true }
+> ```
+
+#### `String`
+<Tabs items={[
+    "OpenAPI Specification",
+    "Demonstration Code"
+  ]}>
+  <Tab>
+```typescript filename="@samchon/openapi" showLineNumbers
+export namespace OpenApi {
+  export namespace IJsonSchema {
+    /**
+     * String type info.
+     */
+    export interface IString {
+      /**
+       * Discriminator value of the type.
+       */
+      type: "string";
+
+      /**
+       * Format restriction.
+       */
+      format?:
+        | "binary"
+        | "byte"
+        | "password"
+        | "regex"
+        | "uuid"
+        | "email"
+        | "hostname"
+        | "idn-email"
+        | "idn-hostname"
+        | "iri"
+        | "iri-reference"
+        | "ipv4"
+        | "ipv6"
+        | "uri"
+        | "uri-reference"
+        | "uri-template"
+        | "url"
+        | "date-time"
+        | "date"
+        | "time"
+        | "duration"
+        | "json-pointer"
+        | "relative-json-pointer"
+        | (string & {});
+
+      /**
+       * Pattern restriction.
+       */
+      pattern?: string;
+
+      /**
+       * Content media type restriction.
+       */
+      contentMediaType?: string;
+
+      /**
+       * Minimum length restriction.
+       *
+       * @type uint64
+       */
+      minLength?: number;
+
+      /**
+       * Maximum length restriction.
+       *
+       * @type uint64
+       */
+      maxLength?: number;
+
+      /**
+       * Default value.
+       */
+      default?: string;
+
+      /**
+       * Representative title of the schema.
+       */
+      title?: string;
+
+      /**
+       * Detailed description of the schema.
+       * 
+       * Very important for LLM (Large Language Model) function calling.
+       */
+      description?: string;
+
+      /**
+       * Whether the type is deprecated or not.
+       */
+      deprecated?: boolean;
+    }
+  }
+}
+```
+  </Tab>
+  <Tab>
+```typescript filename="demo/demo_json_schema_string.ts" showLineNumbers
+import typia, { tags } from "typia";
+
+console.log(
+  typia.json.application<[
+    string & tags.Format<"uuid"> & tags.MinLength<5> & tags.MaxLength<255>,
+  ]>(),
+  typia.createIs<
+    string & tags.Format<"uuid"> & tags.MinLength<5> & tags.MaxLength<255>
+  >(),
+);
+  // {
+  //   type: "string",
+  //   format: "uuid",
+  //   minLength: 5,
+  //   maxLength: 255,
+  // }
+  //-----------------------
+  // (input) => {
+  //   return (
+  //     "string" === typeof input &&
+  //     /^(?:urn:uuid:)?[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(
+  //       input,
+  //     ) &&
+  //     5 <= input.length &&
+  //     input.length <= 255
+  //   );
+  // }
+```
+  </Tab>
+</Tabs>
+
+> [💻 Playground Link](https://typia.io/playground/?script=JYWwDg9gTgLgBDAnmYBDANHA3g1BzAZzgF84AzKCEOAIiRVRoG4AoFgYwgDsCIAbAKYA6PhDwAKFnATI0QgFa8uQ1GDB9g7VDGDcAPAG0p0uARhRgXPHABkuQkIBi0ENr00Arh+AATGgD5bewIhAFlLABkBKxgACz0AVkC7GHwQ0NQADyiY+IAmBKT0YwBdf3EASmLpejl2KAFtAQBJAj1jaTMLKyDUh2coVxh3L18A3rSwyOi8OMTk4LCsnNn8wv9jcqqWCqYgA)
+
+In the JSON schema definition, the `string` type is expressed as above.
+
+As `integer` and `number` type have `minimum` and `miximum` properties, the `string` type has `minLength` and `maxLength` properties to restrict the length of the string. Also, the `string` type has special properties that other types do not have, such as `format`, `pattern`, and `contentMediaType`.
+
+The `pattern` is used for restricting the string value by the regular exression. If the string value does not match the regular expression, the value is not valid.
+
+The `format` is used for restricting the string value by the format. The `format` property is not a regular expression, but a predefined format string. If you want to see the predefined format strings, please refer to below links.
+
+  - [JSON schema string `format`](https://json-schema.org/understanding-json-schema/reference/string#format)
+  - [Regular expressions for `format`](https://github.com/samchon/typia/blob/master/src/tags/internal/FormatCheatSheet.ts)
+
+The last `contentMediaType` is designed for restricting the media type of the string content. It can be used only when the `format` property is one of them. For reference, the `contentMediaType` does not affect to the string value validation, but just used for the documentation reason.
+
+  - `binary`
+  - `byte`
+  - `uri`
+  - `url`
+
+### Nested Types
+#### `Array`
+<Tabs items={[
+    "OpenAPI Specification",
+    "Demonstration Code"
+  ]}>
+  <Tab>
+```typescript filename="@samchon/openapi" showLineNumbers
+export namespace OpenApi {
+  export namespace IJsonSchema {
+    /**
+     * Array type info.
+     */
+    export interface IArray {
+      /**
+       * Discriminator value of the type.
+       */
+      type: "array";
+
+      /**
+       * Items type info.
+       *
+       * The `items` means the type of the array elements. In other words, it is
+       * the type schema info of the `T` in the TypeScript array type `Array<T>`.
+       */
+      items: IJsonSchema;
+
+      /**
+       * Unique items restriction.
+       *
+       * If this property value is `true`, target array must have unique items.
+       */
+      uniqueItems?: boolean;
+
+      /**
+       * Minimum items restriction.
+       *
+       * Restriction of minumum number of items in the array.
+       *
+       * @type uint64
+       */
+      minItems?: number;
+
+      /**
+       * Maximum items restriction.
+       *
+       * Restriction of maximum number of items in the array.
+       *
+       * @type uint64
+       */
+      maxItems?: number;
+
+      /**
+       * Representative title of the schema.
+       */
+      title?: string;
+
+      /**
+       * Detailed description of the schema.
+       * 
+       * Very important for LLM (Large Language Model) function calling.
+       */
+      description?: string;
+
+      /**
+       * Whether the type is deprecated or not.
+       */
+      deprecated?: boolean;
+    }
+  }
+}
+```
+  </Tab>
+  <Tab>
+```typescript filename="demo/demo_json_schema_array.ts" showLineNumbers
+import typia, { tags } from "typia";
+
+console.log(
+  typia.json.application<[
+    Array<string & tags.Format<"uuid">> 
+      & tags.MinItems<1> 
+      & tags.UniqueItems
+  ]>(),
+  typia.createIs<
+    Array<string & tags.Format<"uuid">> 
+      & tags.MinItems<1>
+      & tags.UniqueItems
+  >(),
+);
+  // {
+  //   type: "array",
+  //   items: {
+  //     type: "string",
+  //     format: "uuid",
+  //   },
+  //   minItems: 1,
+  //   uniqueItems: true,
+  // }
+  //-----------------------
+  // (() => {
+  //   return (input) =>
+  //     Array.isArray(input) &&
+  //     1 <= input.length &&
+  //     (input.length <= 1 || input.length === new Set(input).size) &&
+  //     input.every(
+  //       (elem) =>
+  //         "string" === typeof elem &&
+  //         /^(?:urn:uuid:)?[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(
+  //           elem,
+  //         ),
+  //     );
+  // })()
+```
+  </Tab>
+</Tabs>
+
+In the JSON schema definition, the `array` type is expressed as above.
+
+At first, `items` property is used for describing the type of the array elements. In the TypeScript, it is the type schema info of the `T` element type in the TypeScript array type `Array<T>`.
+
+The `uniqueItems` property is used for describing whether the array elements are unique or not. If the `uniqueItems` property is `true`, the array elements must be unique. Otherwise `false` or `undefined`, the array elements are not restricted to be unique.
+
+Also, `minItems` and `maxItems` properties are used for restricting the number of the array elements. The `minItems` property is used for describing the minimum number of the array elements, and the `maxItems` property is used for describing the maximum number of the array elements.
+
+#### `Tuple`
+<Tabs items={[
+    "OpenAPI Specification",
+    "Demonstration Code"
+  ]}>
+  <Tab>
+```typescript filename="@samchon/openapi" showLineNumbers
+export namespace OpenApi {
+  export namespace IJsonSchema {
+    /**
+     * Tuple type info.
+     */
+    export interface ITuple {
+      /**
+       * Discriminator value of the type.
+       */
+      type: "array";
+
+      /**
+       * Prefix items.
+       *
+       * The `prefixItems` means the type schema info of the prefix items in the
+       * tuple type. In the TypeScript, it is expressed as `[T1, T2]`.
+       *
+       * If you want to express `[T1, T2, ...TO[]]` type, you can configure the
+       * `...TO[]` through the {@link additionalItems} property.
+       */
+      prefixItems: IJsonSchema[];
+
+      /**
+       * Additional items.
+       *
+       * The `additionalItems` means the type schema info of the additional items
+       * after the {@link prefixItems}. In the TypeScript, if there's a type
+       * `[T1, T2, ...TO[]]`, the `...TO[]` is represented by the `additionalItems`.
+       *
+       * By the way, if you configure the `additionalItems` as `true`, it means
+       * the additional items are not restricted. They can be any type, so that
+       * it is equivalent to the TypeScript type `[T1, T2, ...any[]]`.
+       *
+       * Otherwise configure the `additionalItems` as the {@link IJsonSchema},
+       * it means the additional items must follow the type schema info.
+       * Therefore, it is equivalent to the TypeScript type `[T1, T2, ...TO[]]`.
+       */
+      additionalItems?: boolean | IJsonSchema;
+
+      /**
+       * Unique items restriction.
+       *
+       * If this property value is `true`, target tuple must have unique items.
+       */
+      uniqueItems?: boolean;
+
+      /**
+       * Minimum items restriction.
+       *
+       * Restriction of minumum number of items in the tuple.
+       *
+       * @type uint64
+       */
+      minItems?: number;
+
+      /**
+       * Maximum items restriction.
+       *
+       * Restriction of maximum number of items in the tuple.
+       *
+       * @type uint64
+       */
+      maxItems?: number;
+
+      /**
+       * Representative title of the schema.
+       */
+      title?: string;
+
+      /**
+       * Detailed description of the schema.
+       * 
+       * Very important for LLM (Large Language Model) function calling.
+       */
+      description?: string;
+
+      /**
+       * Whether the type is deprecated or not.
+       */
+      deprecated?: boolean;
+    }
+  }
+}
+```
+  </Tab>
+  <Tab>
+```typescript filename="demo/demo_json_schema_tuple.ts" showLineNumbers
+import typia from "typia";
+
+console.log(
+  typia.json.application<[
+    [3, 4, string],
+    [number, string, boolean],
+    [boolean, number, ...string[]]
+  ]>(),
+);
+  // [
+  //   {
+  //     type: "array",
+  //     prefixItems: [
+  //       { const: 3 },
+  //       { const: 4 },
+  //       { type: "string" },
+  //     ],
+  //     additionalItems: false,
+  //   },
+  //   {
+  //     type: "array",
+  //     prefixItems: [
+  //       { type: "number" },
+  //       { type: "string" },
+  //       { type: "boolean" },
+  //     ],
+  //     additionalItems: false,
+  //   },
+  //   {
+  //     type: "array",
+  //     prefixItems: [
+  //       { type: "boolean" },
+  //       { type: "number" },
+  //     ],
+  //     additionalItems: {
+  //       type: "string",
+  //     },
+  //   },
+  // ]
+```
+  </Tab>
+</Tabs>
+
+In the JSON schema definition, the `tuple` type is expressed as above.
+
+The `tuple` type is a special type of the `array` type. The `array` type is used for representing the array of the same type elements, but the `tuple` type is used for representing the array of the different type elements.
+
+In the TypeScript, the `tuple` type is expressed as `[T1, T2, ...TO[]]`, and such list of prefixed items are archived on the `prefixItems` property. If you make the `prefixItems` to be zero length array, it is equivalent to the empty array type.
+
+By the way, if you want to express `[T1, T2, ...TO[]]` type, which means that only `T1`, `T2` types are prefixed and the rest of the types are any type, you can configure the `...TO[]` type through the `additionalItems` property.
+
+#### `Object`
+<Tabs items={[
+    "OpenAPI Specification",
+    "Demonstration Code"
+  ]}>
+  <Tab>
+```typescript filename="@samchon/openapi" showLineNumbers
+export namespace OpenApi {
+  export namespace IJsonSchema {
+    /**
+     * Object type info.
+     */
+    export interface IObject {
+      /**
+       * Discriminator value of the type.
+       */
+      type: "object";
+
+      /**
+       * Properties of the object.
+       *
+       * The `properties` means a list of key-value pairs of the object's
+       * regular properties. The key is the name of the regular property,
+       * and the value is the type schema info.
+       *
+       * If you need additional properties that is represented by dynamic key,
+       * you can use the {@link additionalProperties} instead.
+       */
+      properties?: Record<string, IJsonSchema>;
+
+      /**
+       * Additional properties' info.
+       *
+       * The `additionalProperties` means the type schema info of the additional
+       * properties that are not listed in the {@link properties}.
+       *
+       * If the value is `true`, it means that the additional properties are not
+       * restricted. They can be any type. Otherwise, if the value is
+       * {@link IOpenAiSchema} type, it means that the additional properties must
+       * follow the type schema info.
+       *
+       * - `true`: `Record<string, any>`
+       * - `IOpenAiSchema`: `Record<string, T>`
+       */
+      additionalProperties?: boolean | IJsonSchema;
+
+      /**
+       * List of key values of the required properties.
+       *
+       * The `required` means a list of the key values of the required
+       * {@link properties}. If some property key is not listed in the `required`
+       * list, it means that property is optional. Otherwise some property key
+       * exists in the `required` list, it means that the property must be filled.
+       *
+       * Below is an example of the {@link properties} and `required`.
+       *
+       * ```typescript
+       * interface SomeObject {
+       *   id: string;
+       *   email: string;
+       *   name?: string;
+       * }
+       * ```
+       *
+       * As you can see, `id` and `email` {@link properties} are {@link required},
+       * so that they are listed in the `required` list.
+       *
+       * ```json
+       * {
+       *   "type": "object",
+       *   "properties": {
+       *     "id": { "type": "string" },
+       *     "email": { "type": "string" },
+       *     "name": { "type": "string" }
+       *   },
+       *   "required": ["id", "email"]
+       * }
+       * ```
+       */
+      required?: string[];
+
+      /**
+       * Representative title of the schema.
+       */
+      title?: string;
+
+      /**
+       * Detailed description of the schema.
+       * 
+       * Very important for LLM (Large Language Model) function calling.
+       */
+      description?: string;
+
+      /**
+       * Whether the type is deprecated or not.
+       */
+      deprecated?: boolean;
+    }
+  }
+}
+```
+  </Tab>
+  <Tab>
+```typescript filename="demo/demo_json_schema_object.ts" showLineNumbers
+import typia, { tags } from "typia";
+
+console.log(
+  typia.json.application<[
+    {
+      id: string & tags.Format<"uuid">;
+      name?: string;
+      age?: number & tags.Type<"uint32">;
+      configurations: {
+        [key: string]: boolean;
+      };
+    }
+  ]>(),
+);
+  // {
+  //   type: "object",
+  //   properties: {
+  //     id: {
+  //       type: "string",
+  //       format: "uuid",
+  //     },
+  //     name?: {
+  //       type: "string",
+  //     },
+  //     age: {
+  //       type: "integer",
+  //       minimum: 0,
+  //     },
+  //     configurations: {
+  //       type: "object",
+  //       properties: {},
+  //       additionalProperties: {
+  //         type: "boolean",
+  //       },
+  //     },
+  //   },
+  //   required: ["id", "configurations"],
+  // }
+```
+  </Tab>
+</Tabs>
+
+In the JSON schema definition, the `object` type is expressed as above.
+
+The `object` type has `properties` and `required` properties. The `properties` property is used for describing the regular properties of the object, and the `required` property is used for describing the required properties of the object.
+
+For example, above example code in the second tab contains a TypeScript object type. In the type, there are four regular properties; `id`, `name`, `age` and `configurations`. In the above example TypeScript object definition, only `id` and `configurations` properties are required, and the others are optional. Therefore, the `required` property is configured as `["id", "configurations"]`.
+
+Also, the `configurations` property is a special property that is represented by the dynamic key-value pairs. The `additionalProperties` property is used for describing the type schema info of the additional properties that are not listed in the `properties` property; `Record<string, T>`.
+
+For reference, if you configure the `additionalProperties` property just as `true`, it means that type of the additional properties are not restricted, so that it is equivalent to the `any` type case; `Record<string, any>`. Otherwise the `additionalProperties` property configured as `false`, it means the object type does not allow any superfluous properties. In the `undefined` value case, it means that does not consider and validatea the superfluous properties.
+
+#### `Reference`
+<Tabs items={[
+    "OpenAPI Specification",
+    "Demonstration Code"
+  ]}>
+  <Tab>
+```typescript filename="@samchon/openapi" showLineNumbers
+export namespace OpenApi {
+  export namespace IJsonSchema {
+    /**
+     * Reference type directing named schema.
+     */
+    export interface IReference<Key = string> {
+      /**
+       * Reference to the named schema.
+       *
+       * The `ref` is a reference to the named schema. Format of the `$ref` is
+       * following the JSON Pointer specification. In the OpenAPI, the `$ref`
+       * starts with `#/components/schemas/` which means the type is stored in
+       * the {@link OpenApi.IComponents.schemas} object.
+       *
+       * - `#/components/schemas/SomeObject`
+       * - `#/components/schemas/AnotherObject`
+       */
+      $ref: Key;
+
+      /**
+       * Representative title of the schema.
+       */
+      title?: string;
+
+      /**
+       * Detailed description of the schema.
+       * 
+       * Very important for LLM (Large Language Model) function calling.
+       */
+      description?: string;
+
+      /**
+       * Whether the type is deprecated or not.
+       */
+      deprecated?: boolean;
+    }
+  }
+}
+```
+  </Tab>
+  <Tab>
+```typescript filename="demo/demo_json_schema_reference.ts" showLineNumbers
+import typia from "typia";
+
+interface IMember {
+  id: string;
+  name: string;
+  age?: number;
+}
+console.log(
+  typia.json.application<[
+    IMember,
+    {
+      x: number;
+      y: number;
+      z?: number;
+    }
+  ]>(),
+);
+  // {
+  //   components: {
+  //     schemas: {
+  //       IMember: {
+  //         type: "object",
+  //         properties: {
+  //           id: { type: "string" },
+  //           name: { type: "string" },
+  //           age: { type: "number" },
+  //         },
+  //         required: ["id", "name"],
+  //       },
+  //     },
+  //   },
+  //   schemas: [
+  //     {
+  //       $ref: "#/components/schemas/IMember",
+  //     },
+  //     {
+  //       type: "object",
+  //       properties: {
+  //         x: { type: "number" },
+  //         y: { type: "number" },
+  //         z: { type: "number" },
+  //       },
+  //       required: ["x", "y"],
+  //     },
+  //   ],
+  // }
+```
+  </Tab>
+</Tabs>
+
+In the JSON schema definition, the `reference` type is expressed as above.
+
+The `reference` type is used for referencing the named schema, defined in the [`components`](#components) instance. If you have a named schema, you can reference it by the `$ref` property with `#/components/schemas` prefix. In the above case, `$ref` of the `IMember` type is `#/components/schemas/IMember`.
+
+Also in the above example code of second tab, you can see that two types are listed in the JSON schema generator. The first is the `IMember`  type that is defined as a explicit named interface type, and the second is the literal object type. As the `IMember` type is defined as a named schema, it is referenced by the `$ref` property. 
+
+The other one is not named type case, so that listed in the *schemas* directly.
+
+#### `OneOf`
+<Tabs items={[
+    "OpenAPI Specification",
+    "Demonstration Code"
+  ]}>
+  <Tab>
+```typescript filename="@samchon/openapi" showLineNumbers
+export namespace OpenApi {
+  export namespace IJsonSchema {
+    /**
+     * Union type.
+     *
+     * IOneOf` represents an union type of the TypeScript (`A | B | C`).
+     *
+     * For reference, even though your Swagger (or OpenAPI) document has
+     * defined `anyOf` instead of the `oneOf`, {@link OpenApi} forcibly
+     * converts it to `oneOf` type.
+     */
+    export interface IOneOf {
+      /**
+       * List of the union types.
+       */
+      oneOf: Exclude<IJsonSchema, IJsonSchema.IOneOf>[];
+
+      /**
+       * Discriminator info of the union type.
+       */
+      discriminator?: IOneOf.IDiscriminator;
+
+      /**
+       * Representative title of the schema.
+       */
+      title?: string;
+
+      /**
+       * Detailed description of the schema.
+       * 
+       * Very important for LLM (Large Language Model) function calling.
+       */
+      description?: string;
+
+      /**
+       * Whether the type is deprecated or not.
+       */
+      deprecated?: boolean;
+    }
+    export namespace IOneOf {
+      /**
+       * Discriminator info of the union type.
+       */
+      export interface IDiscriminator {
+        /**
+         * Property name for the discriminator.
+         */
+        propertyName: string;
+
+        /**
+         * Mapping of the discriminator value to the schema name.
+         *
+         * This property is valid only for {@link IReference} typed
+         * {@link IOneOf.oneof} elements. Therefore, `key` of `mapping` is
+         * the discriminator value, and `value` of `mapping` is the
+         * schema name like `#/components/schemas/SomeObject`.
+         */
+        mapping?: Record<string, string>;
+      }
+    }
+  }
+}
+```
+ </Tab>
+ <Tab>
+```typescript filename="demo/demo_json_schema_oneof.ts" showLineNumbers
+import typia from "typia";
+
+interface ICircle {
+  type: "circle";
+  radius: number;
+}
+interface ITriangle {
+  type: "triangle";
+  base: number;
+  height: number;
+}
+interface IRectangle {
+  type: "rectangle";
+  width: number;
+  height: number;
+}
+
+console.log(
+  typia.json.application<[
+    | ICircle 
+    | ITriangle 
+    | IRectangle
+  ]>(),
+);
+  // {
+  //   version: "3.1",
+  //   components: {
+  //     schemas: {
+  //       ICircle: {
+  //         type: "object",
+  //         properties: {
+  //           type: { const: "circle" },
+  //           radius: { type: "number" },
+  //         },
+  //         required: ["type", "radius"],
+  //       },
+  //       ITriangle: {
+  //         type: "object",
+  //         properties: {
+  //           type: { const: "triangle" },
+  //           base: { type: "number" },
+  //           height: { type: "number" },
+  //         },
+  //         required: ["type", "base", "height"],
+  //       },
+  //       IRectangle: {
+  //         type: "object",
+  //         properties: {
+  //           type: { const: "rectangle" },
+  //           width: { type: "number" },
+  //           height: { type: "number" },
+  //         },
+  //         required: ["type", "width", "height"],
+  //       },
+  //     },
+  //   },
+  //   schemas: [
+  //     {
+  //       oneOf: [
+  //         { $ref: "#/components/schemas/ICircle" },
+  //         { $ref: "#/components/schemas/ITriangle" },
+  //         { $ref: "#/components/schemas/IRectangle" },
+  //       ],
+  //       discriminator: {
+  //         propertyName: "type",
+  //         mapping: {
+  //           circle: "#/components/schemas/ICircle",
+  //           triangle: "#/components/schemas/ITriangle",
+  //           rectangle: "#/components/schemas/IRectangle",
+  //         },
+  //       },
+  //     },
+  //   ],
+  // }
+```
+  </Tab>
+</Tabs>
+
+In the JSON schema definition, the `oneOf` type is expressed as above.
+
+The `oneOf` type is used for representing the union type of the TypeScript (`A | B | C`). 
+
+Individual types composing the union type are listed in the `oneOf` property. Also, the `discriminator` property is constructed only when **discriminator property** exists in the union type, and every individual types are named [reference](#reference) type like above case.
+
+  - `ICircle.type`: "circle"
+  - `ITriangle.type`: "triangle"
+  - `IRectangle.type`: "rectangle"
+
+### Special Types
+#### `Null`
+<Tabs items={[
+    "OpenAPI Specification",
+    "Demonstration Code"
+  ]}>
+  <Tab>
+```typescript filename="@samchon/openapi" showLineNumbers
+export namespace OpenApi {
+  export namespace IJsonSchema {
+    /**
+     * Null type.
+     */
+    export interface INull {
+      /**
+       * Discriminator value of the type.
+       */
+      type: "null";
+
+      /**
+       * Default value.
+       */
+      default?: null;
+
+      /**
+       * Representative title of the schema.
+       */
+      title?: string;
+
+      /**
+       * Detailed description of the schema.
+       * 
+       * Very important for LLM (Large Language Model) function calling.
+       */
+      description?: string;
+
+      /**
+       * Whether the type is deprecated or not.
+       */
+      deprecated?: boolean;
+    }
+  }
+}
+```
+  </Tab>
+  <Tab>
+```typescript filename="demo/demo_json_schema_null.ts" showLineNumbers
+import typia from "typia";
+
+console.log(
+  typia.json.application<[
+    null,
+    string | null,
+    number | null,
+  ]>(),
+);
+  // [
+  //   { type: "null" },
+  //   {
+  //     oneOf: [
+  //       { type: "null" },
+  //       { type: "string" },
+  //     ],
+  //   },
+  //   {
+  //     oneOf: [
+  //       { type: "null" },
+  //       { type: "number" },
+  //     ],
+  //   },
+  // ]
+```
+  </Tab>
+</Tabs>
+
+In the JSON schema definition, the `null` type is expressed as above.
+
+It is exactly same with `null` type in the TypeScript.
+
+If you want to declare a `nullable` type of the other type, you have to use the [`oneOf`](#oneof) type with `null` type.
+
+#### `Unknown`
+<Tabs items={[
+    "OpenAPI Specification",
+    "Demonstration Code"
+  ]}>
+  <Tab>
+```typescript filename="@samchon/openapi" showLineNumbers
+export namespace OpenApi {
+  export namespace IJsonSchema {
+    /**
+     * Unknown, `any` type.
+     */
+    export interface IUnknown extends __IAttribute {
+      /**
+       * Type is never be defined.
+       */
+      type?: undefined;
+
+      /**
+       * Representative title of the schema.
+       */
+      title?: string;
+
+      /**
+       * Detailed description of the schema.
+       * 
+       * Very important for LLM (Large Language Model) function calling.
+       */
+      description?: string;
+
+      /**
+       * Whether the type is deprecated or not.
+       */
+      deprecated?: boolean;
+    }
+  }
+}
+```
+  </Tab>
+  <Tab>
+```typescript filename="demo/demo_json_schema_unknown.ts" showLineNumbers
+import typia from "typia";
+
+console.log(
+  typia.json.application<[
+    any,
+    unknown
+  ]>(),
+);
+  // [
+  //   {}, 
+  //   {},
+  // ]
+```
+  </Tab>
+</Tabs>
+
+In the JSON schema definition, `unknown` type is expressed as above.
+
+In the TypeScript definition, it is equivalent `any` and `unknown` types.
+
+### Components
+<Tabs items={[
+    "OpenAPI Specification",
+    "Demonstration Code"
+  ]}>
+  <Tab>
+```typescript filename="@samchon/openapi" showLineNumbers
+export namespace OpenApi {
+  /**
+   * Reusable components in OpenAPI.
+   *
+   * A storage of reusable components in OpenAPI document.
+   *
+   * In other words, it is a storage of named DTO schemas and security schemes.
+   */
+  export interface IComponents<Schema extends IJsonSchema = IJsonSchema> {
+    /**
+     * An object to hold reusable DTO schemas.
+     *
+     * In other words, a collection of named JSON schemas.
+     */
+    schemas?: Record<string, Schema>;
+  }
+}
+```
+  </Tab>
+  <Tab>
+```typescript filename="demo/demo_json_schema_oneof.ts" showLineNumbers
+import typia from "typia";
+
+interface ICircle {
+  type: "circle";
+  radius: number;
+}
+interface ITriangle {
+  type: "triangle";
+  base: number;
+  height: number;
+}
+interface IRectangle {
+  type: "rectangle";
+  width: number;
+  height: number;
+}
+
+console.log(
+  typia.json.application<[
+    | ICircle 
+    | ITriangle 
+    | IRectangle
+  ]>(),
+);
+  // {
+  //   version: "3.1",
+  //   components: {
+  //     schemas: {
+  //       ICircle: {
+  //         type: "object",
+  //         properties: {
+  //           type: { const: "circle" },
+  //           radius: { type: "number" },
+  //         },
+  //         required: ["type", "radius"],
+  //       },
+  //       ITriangle: {
+  //         type: "object",
+  //         properties: {
+  //           type: { const: "triangle" },
+  //           base: { type: "number" },
+  //           height: { type: "number" },
+  //         },
+  //         required: ["type", "base", "height"],
+  //       },
+  //       IRectangle: {
+  //         type: "object",
+  //         properties: {
+  //           type: { const: "rectangle" },
+  //           width: { type: "number" },
+  //           height: { type: "number" },
+  //         },
+  //         required: ["type", "width", "height"],
+  //       },
+  //     },
+  //   },
+  //   schemas: [
+  //     {
+  //       oneOf: [
+  //         { $ref: "#/components/schemas/ICircle" },
+  //         { $ref: "#/components/schemas/ITriangle" },
+  //         { $ref: "#/components/schemas/IRectangle" },
+  //       ],
+  //       discriminator: {
+  //         propertyName: "type",
+  //         mapping: {
+  //           circle: "#/components/schemas/ICircle",
+  //           triangle: "#/components/schemas/ITriangle",
+  //           rectangle: "#/components/schemas/IRectangle",
+  //         },
+  //       },
+  //     },
+  //   ],
+  // }
+```
+  </Tab>
+</Tabs>
+
+Collection of named schemas.
+
+In the JSON schema definition, the `components` is a collection of named schemas. It is used for storing the reusable DTO schemas, and referenced by the [`reference`](#reference) type with `$ref` property and `#/components/schemas/` prefixed addresses.
+
+Above second tab is the example code defining and utilizing the named schemas. As you can see, the named schemas are same with the TypeScript's named types. They're stored in the `components.schemas` object with the key-value pairs, and [referenced](#reference) by the `$ref` property with `#/components/schemas/` prefixed addresses.
+
+
+
+## Detailed Emendations
+### Decompositions
+#### `Mixed`
+<Tabs items={[
+    "Example Code",
+    "Mixed type in OpenAPI v3.1",
+    "Emended JSON schema type"
+  ]}>
+  <Tab>
+```typescript filename="test/test_json_schema_mixed.ts" showLineNumbers
+// OpenAPI v3.1
+const original: OpenApiV3_1.IJsonSchema.IMixed = {
+  type: ["number", "string", "object"],
+  properties: {
+    id: { type: "string" },
+    validated: { type: "boolean" }, 
+    required: ["id", "validated"],
+  },
+  minimum: 0,
+  exclusiveMinimum: true,
+  nullalble: true,
+};
+
+// Emended
+const emended: OpenApi.IJsonSchema.IOneOf = {
+  oneOf: [
+    { type: "null" },
+    { 
+      type: "number",
+      minimum: 0,
+      exclusiveMinimum: true,
+    },
+    { type: "string" },
+    {
+      type: "object",
+      properties: {
+        id: { type: "string" },
+        validated: { type: "boolean" }, 
+        required: ["id", "validated"],
+      },
+    },
+  ],
+};
+```
+  </Tab>
+  <Tab>
+```typescript filename="@samchon/openapi" showLineNumbers {3, 18-34}
+export namespace OpenApiV3_1 {
+  export type IJsonSchema =
+    | IJsonSchema.IMixed
+    | IJsonSchema.IConstant
+    | IJsonSchema.IBoolean
+    | IJsonSchema.IInteger
+    | IJsonSchema.INumber
+    | IJsonSchema.IString
+    | IJsonSchema.IArray
+    | IJsonSchema.IObject
+    | IJsonSchema.IReference
+    | IJsonSchema.IUnknown
+    | IJsonSchema.INull
+    | IJsonSchema.IAllOf
+    | IJsonSchema.IAnyOf
+    | IJsonSchema.IOneOf;
+  export namespace IJsonSchema {
+    export interface IMixed
+      extends IConstant,
+        Omit<IBoolean, "type" | "default" | "enum">,
+        Omit<INumber, "type" | "default" | "enum">,
+        Omit<IString, "type" | "default" | "enum">,
+        Omit<IArray, "type">,
+        Omit<IObject, "type">,
+        IReference,
+        IOneOf,
+        IAnyOf,
+        IAllOf {
+      type: Array<
+        "boolean" | "integer" | "number" | "string" | "array" | "object"
+      >;
+      default?: any[];
+      enum?: any[];
+    }
+  }
+}
+```
+  </Tab>
+  <Tab>
+```typescript filename="@samchon/openapi" showLineNumbers
+export namespace OpenApi {
+  export type IJsonSchema =
+    | IJsonSchema.IConstant
+    | IJsonSchema.IBoolean
+    | IJsonSchema.IInteger
+    | IJsonSchema.INumber
+    | IJsonSchema.IString
+    | IJsonSchema.IArray
+    | IJsonSchema.ITuple
+    | IJsonSchema.IObject
+    | IJsonSchema.IReference
+    | IJsonSchema.IOneOf
+    | IJsonSchema.INull
+    | IJsonSchema.IUnknown;
+}
+```
+  </Tab>
+</Tabs>
+
+In the OpenAPI v3.1 specification, there is an `mixed` type in the JSON schema, which layed out every properties of individual JSON schema types. Such `mixed` type is unclear and dangerous to anyone who sees it, so "Wrtn Studio Pro" decomposes the `mixed` type to [`oneOf`](#oneof) type for clarity.
+
+For reference, the reason why OpenAPI and JSON schema foundations have designed such all-rounder `mixed` type for OpenAPI document hand-writing users. It may be hard to believe that people would handwrite OpenAPI documentation, but this strategy actually exists. However, such strategy is actually exists and name of the strategy is "CDD (Contract Driven Development)".
+
+<Callout type="info">
+**Contract Driven Development**
+
+1. Hand write the OpenAPI document first (maybe as `yaml` extension)
+2. API interface designing, and developing server and client applications at the same time later.
+</Callout>
+
+#### `Enum`
+```typescript filename="test/test_json_schema_constant.ts" showLineNumbers
+// OpenAPI v3.1
+const original: OpenApiV3_1.IJsonSchema.IString = {
+  type: "string",
+  enum: ["cat", "dog", "lion"],
+};
+
+// Emended
+const emended: OpenApi.IJsonSchema.IOneOf = {
+  oneOf: [
+    { const: "cat" },
+    { const: "dog" },
+    { const: "lion" },
+  ],
+};
+```
+
+### Changements
+#### `AllOf`
+```typescript filename="test/test_json_schema_all_of.ts" showLineNumbers
+// OpenAPI v3.1
+const original: OpenApiV3_1.IJsonSchema.IAllOf = {
+  allOf: [
+    {
+      type: "object",
+      properties: {
+        name: { type: "string" },
+        hobby: {
+          type: "object",
+          properties: {
+            name: { type: "string" },
+          },
+          required: ["name"],
+        },
+      },
+      required: ["name", "hobby"],
+    },
+    {
+      type: "object",
+      properties: {
+        age: { type: "integer" },
+        hobby: {
+          type: "object",
+          properties: {
+            category: { type: "string" },
+          },
+          required: ["category"],
+        },
+      },
+      required: ["age", "hobby"],
+    },
+  ],
+};
+
+// Emended
+const emended: OpenApi.IJsonSchema.IObject = {
+  type: "object",
+  properties: {
+    name: { type: "string" },
+    hobby: {
+      type: "object",
+      properties: {
+        name: { type: "string" },
+        category: { type: "string" },
+      },
+      required: ["name", "category"],
+    },
+    age: { type: "integer" },
+  },
+  required: ["name", "hobby", "age"],
+};
+```
+
+In the OpenAPI v3.1 specification, there is a special reference type `allOf`. The `allOf` type is used for composing the schema by combining multiple schemas, and it is exactly similar to the TypeScript's intersection type like `A & B`.
+
+However, such intersection `allOf` type can be converted to a plain object or array type. Therefore, "Wrtn Studio Pro" forcibly casts the `allOf` type to the plain object or array type for clarity.
+
+#### `AnyOf`
+```typescript filename="test/test_json_schema_any_of.ts" showLineNumbers
+// OpenAPI v3.1
+const original: OpenApiV3_1.IJsonSchema.IAnyOf = {
+  anyOf: [
+    { type: "number" },
+    { type: "string" },
+  ],
+};
+
+// Emended
+const emended: OpenApi.IJsonSchema.IOneOf = {
+  oneOf: [
+    { type: "number" },
+    { type: "string" },
+  ],
+};
+```
+
+In the OpenAPI v3.1 specification, there're two ways to composing union type. The first way is to defining [`oneOf`](#oneof), and the other way is to defining `anyOf` type. To pursue clartiy by removing synonym expression, "Wrtn Studio Pro" forcibly casts the `anyOf` type to `oneOf` type. 
+
+For reference, "Wrtn Studio Pro" is compiling workflow program to TypeScript, and the TypeScript's union type is similar to the `oneOf` meaning. Such principle applies equally to other programming languages; `oneOf`, which must clearly refer to one type, is more appropriate than `anyOf`, which can be any type.
+
+This is the reason why "Wrtn Studio Pro" has adopted `oneOf` type instead of `anyOf` type.
+
+#### `RecursiveReference`
+```typescript filename="test/test_json_schema_recursive_reference.ts" showLineNumbers
+// OpenAPI v3.1
+const original: OpenApiV3_1.IJsonSchema.IRecursiveReference = {
+  $recursiveRef: "#/components/schemas/Category",
+};
+
+// Emended
+const emended: OpenApi.IJsonSchema.IReference {
+  $ref: "#/components/schemas/Category",
+};
+```
+
+In the OpenAPI v3.1 specification, there is a special reference type `recursiveRef`. The `recursiveRef` indicates the reference type is recursive, so that the reference type is referring to itself recursively when visiting the nested schema elements. 
+
+However, the `recursiveRef` type is not a mandatory specification, and it is easy to check whether the reference type is recursive or not, so that "Wrtn Studio Pro" forcibly casts the `recursiveRef` type to the `ref` type for clarity.
+
+### Separations
+#### `Nullable`
+<Tabs items={[
+    "Example Code",
+    "Demonstration Code",
+  ]}>
+  <Tab>
+```typescript filename="test/test_json_schema_nullable.ts" showLineNumbers
+// OpenAPI v3.1
+const original: OpenApiV3_1.IJsonSchema.IOneOf = {
+  oneOf: [
+    { 
+      type: "number", 
+      nullable: true,
+    },
+    {
+      type: "string",
+      nullable: true,
+    },
+  ],
+};
+
+// Emended
+const emended: OpenApi.IJsonSchema.IOneOf = { 
+  oneOf: [
+    { type: "number" },
+    { type: "string" },
+    { type: "null" },
+  ],
+};
+```
+  </Tab>
+  <Tab>
+```typescript filename="demo/demo_json_schema_nullable.ts" showLineNumbers
+import typia from "typia";
+
+typia.json.application<[
+  number | string | null,
+]>();
+  // {
+  //   oneOf: [
+  //     {
+  //       type: "null",
+  //     },
+  //     {
+  //       type: "string",
+  //     },
+  //     {
+  //       type: "number",
+  //     },
+  //   ],
+  // }
+```
+  </Tab>
+</Tabs>
+
+> [💻 Playground Link](https://typia.io/playground/?script=JYWwDg9gTgLgBDAnmYBDOAzKERwERIqp4DcAUGYWgHQBWAzhAHbWphgA2wAxqjMMwA8AbTJw4TAK4gARgFMocAD5x6MKMCYBzZRMkcOAGjIBdAHwAKAJQkgA)
+
+In the OpenAPI v3.1 specification, there're two ways to composing nullable type. The first is adding `nullable` property to a schema, and the second way is to declaring a [`null`](#null) type and combinating it with the [`oneOf`](#oneOf) type.
+
+To pursue clarity by removing synonym expression, "Wrtn Studio Pro" adapts the second way; "declaring [`null`](#null) type and combinating it with the [`oneOf`](#oneOf) type.
+
+For reference, "Wrtn Studio Pro" has adopted the [`null`](#null) type with [`oneOf`](#oneof) type combination is, it is clear than `nullable` property case. As you can see from the above example code of the second tab, the `nullable` property can be duplicated when union type comes.
+
+#### `Array` and `Tuple`
+<Tabs items={[
+    "OpenAPI Specification", 
+    "Example Code",
+    "Demonstration Code",
+  ]}>
+  <Tab>
+```typescript filename="@samchon/openapi" showLineNumbers {4-7, 17, 23-24}
+export namespace OpenApiV3_1 {
+  export namespace IJsonSchema {
+    export interface IArray extends __ISignificant<"array"> {
+      items: IJsonSchema | IJsonSchema[];
+      prefixItems?: IJsonSchema[];
+      additionalItems?: boolean | IJsonSchema;
+      uniqueItems?: boolean;
+      /** @type uint64 */ minItems?: number;
+      /** @type uint64 */ maxItems?: number;
+    }
+  }
+}
+
+export namespace OpenApi {
+  export namespace IJsonSchema {
+    export interface IArray extends __ISignificant<"array"> {
+      items: IJsonSchema;
+      uniqueItems?: boolean;
+      /** @type uint64 */ minItems?: number;
+      /** @type uint64 */ maxItems?: number;
+    }
+    export interface ITuple extends __ISignificant<"array"> {
+      prefixItems: IJsonSchema[];
+      additionalItems?: boolean | IJsonSchema;
+      uniqueItems?: boolean;
+      /** @type uint64 */ minItems?: number;
+      /** @type uint64 */ maxItems?: number;
+    }
+  }
+}
+```
+  </Tab>
+  <Tab>
+```typescript filename="test/test_json_schema_array_and_tuple.ts" showLineNumbers
+//----
+// OpenAPI v3.1
+//----
+const originalArray: OpenApiV3_1.IJsonSchema.IArray = {
+  type: "array",
+  items: {
+    type: "boolean",
+  }
+};
+const originalTuple: OpenApiV3_1.IJsonSchema.IArray = {
+  type: "array",
+  items: [
+    { type: "string" },
+    { type: "number" },
+  ],
+}
+
+//----
+// Emended
+//---
+const emendedArray: OpenApi.IJsonSchema.IArray = {
+  type: "array",
+  items: {
+    type: "boolean",
+  },
+};
+const emendedTuple: OpenApi.IJsonSchema.ITuple = {
+  type: "array",
+  prefixItems: [
+    { type: "string" },
+    { type: "number" },
+  ],
+};
+```
+  </Tab>
+  <Tab>
+```typescript filename="demo/demo_json_schema_array_and_tuple.ts" showLineNumbers
+import typia from "typia";
+
+typia.json.application<[
+  Array<boolean>,
+  [string, number],
+  [number, string, ...boolean[]],
+]>();
+// {
+//   version: "3.1",
+//   schemas: [
+//     {
+//       type: "array",
+//       items: { type: "boolean" },
+//     },
+//     {
+//       type: "array",
+//       prefixItems: [
+//         { type: "string" },
+//         { type: "number" },
+//       ],
+//     },
+//     {
+//       type: "array",
+//       prefixItems: [
+//         { type: "number" },
+//         { type: "string" },
+//       ],
+//       additionalItems: { type: "boolean" },
+//     },
+//   ],
+// }
+```
+  </Tab>
+</Tabs>
+
+> [💻 Playground Link](https://typia.io/playground/?script=JYWwDg9gTgLgBDAnmYBDOAzKERwERIqp4DcAUGYWgHQBWAzhAHbWphgA2wAxqjMMwA8AbTJw4AQShRUiQQCMIEDgFNUTAHwAaMXGH0YUYEwDmWuEwCuIeSqgBdHeOFWbd8waOnz1X4uVqTML2jmT2GgAUAJQkQA)
+
+As you can see, original specification of OpenAPI v3.1 has define `Array` to be ambiguous.
+
+The `items` property can be either a single schema or an array of schemas. When the `items` property is a single schema, it means an `Array<T>` type in the TypeScript. On the other hand, when the `items` property is an array of schemas, it means a tuple type in TypeScript like `[string, number]` case. 
+
+Also in the `tuple` type case, it is possible to utilize `prefixItems` property instead of the `items` proeprty. Furthermore, the `additionalItems` property can be used only when the `tuple` type case.
+
+To clarify the distinction between `array` and `tuple` types, "Wrtn Studio Pro" has separated `OpenApiV3_1.IJsonSchema.IArray` type to `OpenApi.IJsonSchema.IArray` and `OpenApi.IJsonSchema.ITuple` types, removing vulnerable properties to each side.
+
+

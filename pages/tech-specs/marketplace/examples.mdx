@@ -1,0 +1,333 @@
+import { Tabs, Tab } from 'nextra-theme-docs';
+
+## Connector Server
+### Representative Product
+Representative product in the API marketplace.
+
+  - Github Repository: https://github.com/wrtnio/connectors/
+  - Swagger UI: https://wrtnio.github.io/connectors/swagger/
+
+The `connector` is an example project made by "Wrtn Studio Pro" team. It is a representative and default OpenAPI product in the marketplace. If a new customer has not purchased anything in the API marketplace, only the `connector` belonged API functions would be utilized in the "Meta LLM (A.I. Chatbot)".
+
+The `connector` has thousands of API functions interacting with significant services like Google, Github, Slack, and so on. The API functions are groupped by these service names as OpenAPI tags. You can see which API functions are provided in the `connector` server by visiting the [Swagger UI](https://wrtnio.github.io/connectors/swagger/). As you can see, every API functions and DTO types are fully documented with detailed descriptions. Such descriptions help the LLM function calling to select proper function to call and understand of it. 
+
+Also, as this `connector` server has been disclosured in the [Github repository](https://github.com/wrtnio/connectors/) as an open source project, you can learn how to make a well-structured OpenAPI based project. Even though the `connector` server has the "AGPL 3.0" license, so that you cannot use it for commercial purpose, the `connector` server's source codes and API/DTO definitions would be good reference to compose your OpenAPI product in the API marketplace. 
+
+### Pure TypeScript Type
+<Tabs items={[
+    "Triple duplicated NestJS DTO",
+    "Pure Nestia DTO",
+  ]}>
+  <Tab>
+```typescript filename="BbsArticle.ts" showLineNumbers {25-36}
+import { ApiProperty } from "@nestjs/swagger";
+import {
+  ArrayNotEmpty,
+  Format,
+  IsArray,
+  IsObject,
+  IsOptional,
+  IsString,
+  Match,
+  MaxLength,
+  Type,
+  ValidateNested,
+} from "class-validator";
+
+export class BbsArticle {
+  @ApiProperty({
+    format: "uuid",
+  })
+  @IsString()
+  id!: string;
+
+  // DUPLICATED SCHEMA DEFINITION
+  // - duplicated function call + property type
+  // - have to specify `isArray` and `nullable` props by yourself
+  @ApiProperty({
+    type: () => AttachmentFile,
+    nullable: true,
+    isArray: true,
+    description: "List of attached files.",
+  })
+  @Type(() => AttachmentFile)
+  @IsArray()
+  @IsOptional()
+  @IsObject({ each: true })
+  @ValidateNested({ each: true })
+  files!: AttachmentFile[] | null;
+
+  @ApiProperty({
+    type: "string",
+    nullable: true,
+    minLength: 5,
+    maxLength: 100,
+    description: "Title of the article.",
+  })
+  @IsOptional()
+  @IsString()
+  title!: string | null;
+
+  @ApiProperty({
+    description: "Main content body of the article.",
+  })
+  @IsString()
+  body!: string;
+
+  @ApiProperty({
+    format: "date-time",
+    description: "Creation time of article",
+  })
+  @IsString()
+  created_at!: string;
+}
+
+export class AttachmentFile {
+  @ApiProperty({
+    type: "string",
+    maxLength: 255,
+    pattern: "^[a-zA-Z0-9-_]+$",
+    description: "File name.",
+  })
+  @Matches(/^[a-z0-9]+$/)
+  @MaxLength(255)
+  @IsString()
+  name!: string | null;
+
+  @ApiProperty({
+    type: "string",
+    nullable: true,
+    maxLength: 255,
+    pattern: "^[a-zA-Z0-9-_]+$",
+    description: "File extension.",
+  })
+  @Matches(/^[a-z0-9]+$/)
+  @MaxLength(8)
+  @IsOptional()
+  @IsString()
+  extension!: string | null;
+
+  @ApiProperty({
+    format: "uri",
+    description: "URL of the file.",
+  })
+  @Format("uri")
+  @IsString()
+  url!: string;
+}
+```
+  </Tab>
+  <Tab>
+```typescript filename="IBbsArticle.ts" showLineNumbers {9-12}
+import { tags } from "typia";
+
+export interface IBbsArticle {
+  /**
+   * Primary Key.
+   */
+  id: string & tags.Format<"uuid">;
+
+  /**
+   * List of attached files.
+   */
+  files: null | IAttachmentFile[];
+
+  /**
+   * Title of the article.
+   */
+  title: null | (string & tags.MinLength<5> & tags.MaxLength<100>);
+
+  /**
+   * Main content body of the article.
+   */
+  body: string;
+
+  /**
+   * Creation time of article.
+   */
+  created_at: string & tags.Format<"date-time">;
+}
+
+export interface IAttachmentFile {
+  /**
+   * File name.
+   */
+  name: string & tags.Pattern<"^[a-z0-9]+$"> & tags.MaxLength<255>;
+
+  /**
+   * File extension.
+   */
+  extension: null | (string & tags.Pattern<"^[a-z0-9]+$"> & tags.MaxLength<8>);
+
+  /**
+   * URL of the file.
+   */
+  url: string & tags.Format<"uri">;
+}
+```
+  </Tab>
+</Tabs>
+
+Safe and efficient OpenAPI generation by [`nestia`](https://github.com/samchon/nestia).
+
+In the "Wrtn Studio Pro" application, every features start from the OpenAPI specification. API marketplace also trades the OpenAPI document specification. Therefore, exact and efficient OpenAPI generation is much important than anything other. 
+
+By the way, the `connector` server is the representative OpenAPI product providing initial API functions for the newcomers. If there's an error on its OpenAPI document, it may lead to the unpexpected behavior from the LLM (Large Language Model) function calling, so that quality of the "Wrtn Studio Pro" would be downgraded just by such `connector` server's OpenAPI document level error. Otherwise there's no error on the OpenAPI document, but it is not efficient, the productivity of the "Wrtn Studio Pro" would be decreased.
+
+In such reason, "Wrtn Studio Pro" team had to find the best solution for OpenAPI document generation which can ensure both safety and efficiency. The solution is `nestia` developed by one of "Wrtn Studio Pro" developer, which does not require any extra dedication for the OpenAPI document generation. As you can see from the above code snippets, NestJS DTO definitions require triple duplicated schema definitions.
+
+One thing ridiculous is, NestJS has relatively few duplicate definitions or OpenAPI document elements that are handwritten by humans. Most other languages ​​or frameworks cannot get beyond the level of handwriting OpenAPIs, which are not only redundant but also not type-safe. So even if a human makes a mistake while writing an OpenAPI spec, it often passes without any compilation error. And the most fatal aspect of this human mistake is that there can be a gap between the actual specifications of the API function and the specifications in the document. LLM function calling may be properly configured with parameters according to the given OpenAPI document specifications, but the actual document specifications may be incorrect, causing LLM function call execution to fail.
+
+In contrary, `nestia` does not need anything to do for OpenAPI document generation. `nestia` just analyzes the NestJS source code in the compilation level, and builds the OpenAPI document just by that automatically. In such reason, it does not need any duplicated definition, and API functions are always 100% synchronized with the OpenAPI document without any error. Efficiency from no duplicated definition, and safety from compiler level documentation. This is the reason why the `connector` server project has been adopted `nestia` for OpenAPI document generation.
+
+### Test Driven Development
+```typescript
+import {
+  ArrayUtil,
+  GaffComparator,
+  RandomGenerator,
+  TestValidator,
+} from "@nestia/e2e";
+
+import api from "@ORGANIZATION/PROJECT-api/lib/index";
+import { IBbsArticle } from "@ORGANIZATION/PROJECT-api/lib/structures/bbs/IBbsArticle";
+import { IPage } from "@ORGANIZATION/PROJECT-api/lib/structures/common/IPage";
+
+export async function test_api_bbs_article_index_sort(
+  connection: api.IConnection,
+): Promise<void> {
+  // GENERATE 100 ARTICLES
+  const section: string = "general";
+  await ArrayUtil.asyncRepeat(100)(() =>
+    api.functional.bbs.articles.create(connection, section, {
+      writer: RandomGenerator.name(),
+      title: RandomGenerator.paragraph(5)(),
+      body: RandomGenerator.content(8)()(),
+      format: "txt",
+      files: [],
+      password: RandomGenerator.alphabets(8),
+    }),
+  );
+
+  // PREPARE VALIDATOR
+  const validator = TestValidator.sort("BbsArticleProvider.index()")(async (
+    sort: IPage.Sort<IBbsArticle.IRequest.SortableColumns>,
+  ) => {
+    const page: IPage<IBbsArticle.ISummary> =
+      await api.functional.bbs.articles.index(connection, section, {
+        limit: 100,
+        sort,
+      });
+    return page.data;
+  });
+
+  // DO VALIDATE
+  const components = [
+    validator("created_at")(GaffComparator.dates((x) => x.created_at)),
+    validator("updated_at")(GaffComparator.dates((x) => x.updated_at)),
+    validator("title")(GaffComparator.strings((x) => x.title)),
+    validator("writer")(GaffComparator.strings((x) => x.writer)),
+    validator(
+      "writer",
+      "title",
+    )(GaffComparator.strings((x) => [x.writer, x.title])),
+  ];
+  for (const comp of components) {
+    await comp("+", false);
+    await comp("-", false);
+  }
+}
+```
+
+Test Driven Development with strict e2e testing functions.
+
+As `connector` server is the representative product in the "API Marketplace", its runtime safety is much important than any other features. To ensure the `connector` server's runtime safety, "Wrtn Studio Pro" team has adopted the TDD (Test Driven Development) with strict e2e testing functions.
+
+At first, we never develop the main program first. Our rule is to define the interfaces of DTOs and API functions first. And then, we still do not write the main logic code. We write the e2e test program before the main logic code implementation. The main program development starts after the interface definitions and e2e test programs are completed.
+
+Here is the detailed process of our TDD rule for the `connector` server project.
+
+#### 1. Definition
+![ERD](https://github-production-user-asset-6210df.s3.amazonaws.com/13158709/268175441-80ca9c8e-4c96-4deb-a8cb-674e9845ebf6.png)
+
+Before developing the main program, define it before.
+
+At first, design the DB architecture on the Prisma Schema file. 
+
+Writing the schema definitions, don't forget to write the detailed descriptions on each tables and properties. After that, build ERD (Enterprise Relationship Diagram) document through `npm run build:prisma` command. The ERD document will be generated on the `docs/ERD.md` path. If you share the ERD document with your companions, your team can enjoy increased productivity by standardizing words and entities.
+
+At second, write DTO structures under the `src/api/structures` directory and declare API endpoint specs under the `src/controllers` directory. Note that, do not implement the function body of the controller. Just write declaration only. Below code is never pseudo code, but actual code for current step.
+
+```typescript
+@Controlleer("bbs/articles")
+export class BbsArticleController {
+  @TypedRoute.Patch()
+  public async index(
+    @TypedBody() input: IBbsArticle.IRequest
+  ): Promise<IPage<IBbsArticle.ISummary>> {
+    input;
+    return null!;
+  }
+}
+```
+
+#### 2. Software Development Kit
+![nestia-sdk-demo](https://user-images.githubusercontent.com/13158709/215004990-368c589d-7101-404e-b81b-fbc936382f05.gif)
+
+[`@wrtnio/connectors`](https://github.com/wrtnio/connectors) provides SDK (Software Development Kit) for convenience.
+
+SDK library means a collection of `fetch` functions with proper types, automatically generated by [`nestia`](https://github.com/samchon/nestia). As you can see from the above gif image, SDK library boosts up client developments, by providing type hints and auto completions. 
+
+Furthermore, the SDK library supports [Mockup Simulator](https://nestia.io/docs/sdk/simulator/). 
+
+If client developer configures `simulate` option to be `true`, the SDK library will not send HTTP request to your backend server, but simulate the API endpoints by itself. With that feature, frontend developers can directly start the interaction development, even when the [main program development](#4-main-program) has not started.
+
+```bash
+# BUILD SDK IN LOCAL
+npm run build:sdk
+
+# BUILD SDK AND PUBLISH IT TO THE NPM
+npm run package:api
+```
+
+For reference, if you run `npm run benchmark` command, your test functions defined in the `test/features/api` directory would be utilized for performance benchmarking. If you want to see the performance bench result earlier, visit below link please:
+
+  - [docs/benchmarks/AMD Ryzen 9 7940HS w Radeon 780M Graphics.md](https://github.com/samchon/backend/blob/master/docs/benchmarks/AMD%20Ryzen%209%207940HS%20w%20Radeon%20780M%20Graphics.md)
+
+#### 3. Test Automation Program
+> TDD (Test Driven Development)
+
+After the [Definition](#1-definition) and client [SDK](#2-software-development-kit) generation, you've to design the use-case scenarios and implement a test automation program who represents those use-case scenarios and guarantees the [Main Program](#4-main-program).
+
+To add a new test function in the Test Automation Program, create a new TS file under the `test/features` directory following the below category and implement the test scenario function with representative function name and `export` symbol.
+
+Note that, the Test Automation Program resets the local DB schema whenever being run. Therefore, you've to be careful if import data has been stored in the local DB server. To avoid the resetting the local DB, configure the `reset` option like below.
+
+Also, the Test Automation Program runs all of the test functions placed into the `test/features` directory. However, those full testing may consume too much time. Therefore, if you want to reduce the testing time by specializing some test functions, use the `include` option like below.
+
+  - supported options
+    - `include`: test only restricted functions who is containing the special keyword.
+    - `exclude`: exclude some functions who is containing the special keyword.
+    - `reset`: do not reset the DB
+
+```bash
+# test without db reset
+npm run test -- --reset false
+
+# include or exclude some features
+npm run test -- --include something
+npm run test -- --include cart order issue
+npm run test -- --include cart order issue --exclude index deposit
+
+# run performance benchmark program
+npm run benchmark
+```
+
+For reference, if you run `npm run benchmark` command, your test functions defined in the `test/features/api` directory would be utilized for performance benchmarking. If you want to see the performance bench result earlier, visit below link please:
+
+  - [docs/benchmarks/AMD Ryzen 9 7940HS w Radeon 780M Graphics.md](https://github.com/samchon/backend/blob/master/docs/benchmarks/AMD%20Ryzen%209%207940HS%20w%20Radeon%20780M%20Graphics.md)
+
+#### 4. Main Program
+After [Definition](#1-definition), client [SDK](#2-software-development-kit) building and [Test Automation Program](#3-test-automation-program) are all prepared, finally you can develop the Main Program. Also, when you complete the Main Program implementation, it would better to validate the implementation through the pre-built [SDK](#2-software-development-kit) and [Test Automation Program](#3-test-automation-program).
+
+However, do not commit a mistake that writing source codes only in the `src/controllers` classes. The API Controller must have a role that only intermediation. The main source code should be write down separately following the directory categorizing. For example, source code about DB I/O should be written into the `src/providers` directory.

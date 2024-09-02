@@ -1,0 +1,7 @@
+{
+  "preface": "Preface",
+  "migrate": "Migration Schema",
+  "schema": "LLM Function Schema",
+  "websocket": "WebSocket RPC",
+  "execution": "Function Call Execution"
+}

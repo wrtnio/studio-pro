@@ -1,0 +1,107 @@
+import { Tabs, Tab } from 'nextra-theme-docs';
+
+## Conversion
+```typescript filename="src/convert.ts" showLineNumbers
+import { OpenApi } from "@samchon/openapi";
+import fs from "fs";
+
+const document: 
+  | OpenApiV3_1.IDocument
+  | OpenApiV3.IDocument
+  | SwaggerV2.IDocument = JSON.parse(fs.readFileSync("swagger.json", "utf8"));
+const emended: OpenApi.IDocument = OpenApi.migrate(document);
+```
+
+You can easily convert your OpenAPI document to "Wrtn Studio Pro" is following.
+
+Just install `@samchon/openapi` library and call its `OpenApi.convert()` function. Then, whatever your OpenAPI document version is, your document would be converted to the emended OpenAPI v3.1 specified that "Wrtn Studio Pro" has adopted.
+
+By the way, is your document following the OpenAPI specs exactly, without any type error? Even though [marketplace](/tech-specs/marketplace/preface) would reject invalid OpenAPI document uploading, you may want to validate it by yourself on your local machine. In that case, you can assert or validate the OpenAPI document type like below sections.
+
+
+
+
+## Type Assertion
+```bash filename="Terminal"
+npm install typia @samchon/openapi
+npx typia setup
+npx ts-node src/assert.ts
+```
+
+```typescript filename="src/openapi/converters/assert.ts" showLineNumbers
+import { OpenApi, OpenApiV3, OpenApiV3_1, SwaggerV2 } from "@samchon/openapi";
+import typia from "typia";
+
+const main = async (): Promise<void> => {
+  // GET YOUR OPENAPI DOCUMENT
+  const response: Response = await fetch(
+    "https://raw.githubusercontent.com/samchon/openapi/master/examples/v3.0/openai.json"
+  );
+  const document: any = await response.json();
+
+  // TYPE ASSERTION
+  typia.assertGuard<
+    | OpenApiV3_1.IDocument
+    | OpenApiV3.IDocument
+    | SwaggerV2.IDocument
+  >(document);
+
+  // CONVERT TO EMENDED
+  const emended: OpenApi.IDocument = OpenApi.convert(document);
+  console.log(emended);
+};
+main().catch(console.error);
+```
+
+You can assert your OpenAPI document through the [`typia.assertGuard<T>()`](https://typia.io/docs/validators/assert/) function.
+
+If there's any type error, the `typia.assertGuard<T>()` function would throws the `TypeGuardError` exception. Otherwise, it would return nothing, and the `input` type would be considered as the `T` type. Therefore, in the above example code, `document` type be casted to `OpenApiV3_1.IDocument | OpenApiV3.IDocument | SwaggerV2.IDocument` type after the `typia.assertGuard<T>()` function call.
+
+For referene, if your OpenAPI document is uploaded to somewhere URL, you can assert it right now. Just open the below playground link, and change the URL to yours. And then, click the "execute" button. You may see the result of the type assertion; `TypeGuardError` exception or the converted `OpenApi.IDocument` object.
+
+[![Type Assertion Playground](/images/tech-specs/openapi_convert_assert_playground.png)](https://typia.io/playground/?script=JYWwDg9gTgLgBAbzgeTAUwHYEEzADQrra4BqAzAapjsOQPoCMBAygO4CGA5p2lCQExwAvnABmUCCDgAiAAIBndiADGACwgYA9BCLtc0gNwAoUJFhwYAT1zsxEqdKs3DRo8o3z4IdsAxwAvHDs8pYYynAAFACUAFxwAAr2wPJoADwAbhDAACYAfAH5CEZwcJqacADiAKIAKnAAmsgAqgBKKPFVAHJY8QCScAAiyADCTQCyXTXFcO4YnnBQaPKQc2hxLUsrKQFBHMDwomgwahHTJdKqMDBg8jFlUOysAHSc+6oArgBG7ylQszCYGBPdwgTSKFTqLQ6TB6YCabyeXiaNAADyUYAANktNOkyE8AAzaXTAJ4AK3kGmk0yixhKs3m2QgyneIEBcXYGEsO0ePngi2WHjQZIpGGixmmZTgNXqHTgWGYzCqLRqvWQnWmTmA7CewV+MAq73YUGyqTOcAAPoRqKQyIwnr0BkyWYCzZaqMRaHiHU7WRgYK64GwuDw+Px7Y7mb7-SVchFGZHATTXCVJcM1SQlXUasg4FUJp0BlUBtN6fA0L7smhsnF3TRwz7ATta7hgRp0rwYHGG36k3SPBAsU9fKIIBFy5hK9kk0JjN5fNFgexjqoIvSB0LeBIoDSgA)
+
+> [💻 Playground Link](https://typia.io/playground/?script=JYWwDg9gTgLgBAbzgeTAUwHYEEzADQrra4BqAzAapjsOQPoCMBAygO4CGA5p2lCQExwAvnABmUCCDgAiAAIBndiADGACwgYA9BCLtc0gNwAoUJFhwYAT1zsxEqdKs3DRo8o3z4IdsAxwAvHDs8pYYynAAFACUAFxwAAr2wPJoADwAbhDAACYAfAH5CEZwcJqacADiAKIAKnAAmsgAqgBKKPFVAHJY8QCScAAiyADCTQCyXTXFcO4YnnBQaPKQc2hxLUsrKQFBHMDwomgwahHTJdKqMDBg8jFlUOysAHSc+6oArgBG7ylQszCYGBPdwgTSKFTqLQ6TB6YCabyeXiaNAADyUYAANktNOkyE8AAzaXTAJ4AK3kGmk0yixhKs3m2QgyneIEBcXYGEsO0ePngi2WHjQZIpGGixmmZTgNXqHTgWGYzCqLRqvWQnWmTmA7CewV+MAq73YUGyqTOcAAPoRqKQyIwnr0BkyWYCzZaqMRaHiHU7WRgYK64GwuDw+Px7Y7mb7-SVchFGZHATTXCVJcM1SQlXUasg4FUJp0BlUBtN6fA0L7smhsnF3TRwz7ATta7hgRp0rwYHGG36k3SPBAsU9fKIIBFy5hK9kk0JjN5fNFgexjqoIvSB0LeBIoDSgA)
+
+
+
+
+## Detailed Validation
+```typescript filename="src/openapi/converters/validate.ts" showLineNumbers
+import { OpenApi, OpenApiV3, OpenApiV3_1, SwaggerV2 } from "@samchon/openapi";
+import typia from "typia";
+
+const main = async (): Promise<void> => {
+  // GET YOUR OPENAPI DOCUMENT
+  const response: Response = await fetch(
+    "https://raw.githubusercontent.com/samchon/openapi/master/examples/v3.0/openai.json"
+  );
+  const document: any = await response.json();
+
+  // TYPE VALIDATION
+  const result = typia.validate<
+    | OpenApiV3_1.IDocument
+    | OpenApiV3.IDocument
+    | SwaggerV2.IDocument
+  >(document);
+  if (result.success === false) {
+    console.info(result.errors);
+    return;
+  }
+
+  // CONVERT TO EMENDED
+  const emended: OpenApi.IDocument = OpenApi.convert(document);
+  console.info(emended);
+};
+main().catch(console.error);
+```
+
+You can validate your OpenAPI document, and get detailed every type error reasons through the [`typia.validate<T>()`](https://typia.io/docs/validators/validate/) function.
+
+If there're some type errors, the `typia.validate<T>()` function would return the `IValidation.IFailure` object with detailed type error reasons. Otherwise, it would return the `IValidation.ISuccess<T>()` object with the type `T` casted input value.
+
+For reference, if your OpenAPI document is uploaded to somewhere URL, you can validate it right now. Just open the below playground link, and change the URL to yours. And then, click the "execute" button. You may see the result of the type validation; `IValidation.IFailure` object with detailed type error reasons or the converted `OpenApi.IDocument` object.
+
+[![Detailed Validation Playground](/images/tech-specs/openapi_convert_validate_playground.png)](https://typia.io/playground/?script=JYWwDg9gTgLgBAbzgeTAUwHYEEzADQrra4BqAzAapjsOQPoCMBAygO4CGA5p2lCQExwAvnABmUCCDgAiAAIBndiADGACwgYA9BCLtc0gNwAoUJFhwYAT1zsxEqdKs3DRo8o3z4IdsAxwAvHDs8pYYynAAFACUAFxwAAr2wPJoADwAbhDAACYAfAH5CEZwcJqacADiAKIAKnAAmsgAqgBKKPFVAHJY8QCScAAiyADCTQCyXTXFcO4YnnBQaPKQc2hxLUsrKQFBHMDwomgwahHTJdKqMDBg8jFlUOysAHSc+6oArgBG7ylQszCYGBPdwgTSKFTqLQ6TB6YCabyeXiaNAADyUYAANktNOkyE8AAzaXTAJ4AK3kGmk0yixhKs3m2QgyneIEBcXYGEsO0ePngi2WHjQZIpGGixmmZTgNXqHTgJCwABlegMsDVeshOtN6Xylu8MfBAk5gOwnul2BicuwAakznAAD6EaikMiMJ7KpkswG2h1UYi0PHu5msjAwb1wNhcHh8fhugYe4Ohkq5CKMoOAmnTYCiSL8vVA+TvZTKJbyAL+QKic0pKKIW30iBYp6+UQQCK5-VPXgSKDyDMlEqLGDvKAYWnCVwlSXDDUkKotOo1ZBwKoTToDKoDLUeeBoYPZNDZOK+mix+OAnbH3DAjTpXgwFNnkN9mYeBtC5ut3eYffZDNCYzeL40TAlaJz1o2XbQDSQA)
+
+> [💻 Playground Link](https://typia.io/playground/?script=JYWwDg9gTgLgBAbzgeTAUwHYEEzADQrra4BqAzAapjsOQPoCMBAygO4CGA5p2lCQExwAvnABmUCCDgAiAAIBndiADGACwgYA9BCLtc0gNwAoUJFhwYAT1zsxEqdKs3DRo8o3z4IdsAxwAvHDs8pYYynAAFACUAFxwAAr2wPJoADwAbhDAACYAfAH5CEZwcJqacADiAKIAKnAAmsgAqgBKKPFVAHJY8QCScAAiyADCTQCyXTXFcO4YnnBQaPKQc2hxLUsrKQFBHMDwomgwahHTJdKqMDBg8jFlUOysAHSc+6oArgBG7ylQszCYGBPdwgTSKFTqLQ6TB6YCabyeXiaNAADyUYAANktNOkyE8AAzaXTAJ4AK3kGmk0yixhKs3m2QgyneIEBcXYGEsO0ePngi2WHjQZIpGGixmmZTgNXqHTgJCwABlegMsDVeshOtN6Xylu8MfBAk5gOwnul2BicuwAakznAAD6EaikMiMJ7KpkswG2h1UYi0PHu5msjAwb1wNhcHh8fhugYe4Ohkq5CKMoOAmnTYCiSL8vVA+TvZTKJbyAL+QKic0pKKIW30iBYp6+UQQCK5-VPXgSKDyDMlEqLGDvKAYWnCVwlSXDDUkKotOo1ZBwKoTToDKoDLUeeBoYPZNDZOK+mix+OAnbH3DAjTpXgwFNnkN9mYeBtC5ut3eYffZDNCYzeL40TAlaJz1o2XbQDSQA)

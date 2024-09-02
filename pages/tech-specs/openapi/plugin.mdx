@@ -1,0 +1,492 @@
+import { Tabs, Tab } from 'nextra-theme-docs';
+
+
+## JSON Schema
+We are defining surplus plugin properties for special purposes.
+
+<Tabs items={[
+    "Plugin Properties",
+    "OpenAPI v3.1 (emended)",
+  ]}>
+  <Tab>
+```typescript filename="@wrtnio/synonym" showLineNumbers
+export namespace ISwaggerSchema {
+  /**
+   * String type info.
+   */
+  export interface IString extends OpenApi.IJsonSchema.IString, __IAttribute {
+    /**
+     * Secret key for the schema.
+     *
+     * `x-wrtn-secret-key` is a property means a secret key that is required
+     * for the target API endpoint calling. If the secret key is not filled,
+     * the API call would be failed.
+     */
+    "x-wrtn-secret-key"?: string;
+
+    /**
+     * Secret scopes for the schema.
+     *
+     * `x-wrtn-secret-scopes` is a property means a list of secret scopes that
+     * are required for the target API endpoint calling. If the secret scopes
+     * are not satisfied, the API call would be failed.
+     */
+    "x-wrtn-secret-scopes"?: string[];
+  }
+
+  /**
+   * Plugin properties for every types.
+   */
+  export interface __IAttribute {
+    /**
+     * Placeholder value for frontend application.
+     *
+     * Placeholder means the value to be shown in the input field as a hint.
+     * For example, when an email input field exists, the placeholder value
+     * would be "Insert your email address here".
+     */
+    "x-wrtn-placeholder"?: string;
+
+    /**
+     * Prerequisite API endpoint for the schema.
+     *
+     * `x-wrtn-prerequisite` is a property representing the prerequisite API
+     * interaction. It means that, the endpoint API should be called before
+     * calling the target API, for composing some argument value.
+     *
+     * @reference https://github.com/wrtnio/decorators/blob/main/src/Prerequisite.ts
+     */
+    "x-wrtn-prerequisite"?: {
+      /**
+       * HTTP method to call the endpoint.
+       */
+      method: "get" | "post" | "patch" | "put" | "delete";
+
+      /**
+       * Path of the endpoint.
+       */
+      path: string;
+
+      /**
+       * Function returning transformed values using JMESPath expression.
+       *
+       * `Prerequisite.Props.jmesPath` is a string typed property that extracts desired values
+       * from the prerequisite API response using a JMESPath expression. This property simplifies
+       * and replaces the `label`, `value`, and `array` properties.
+       *
+       * JMESPath expressions are used to extract the desired data based on the API response.
+       * The expression must always be a valid JMESPath syntax.
+       *
+       * - Type: `jmesPath: string`
+       * - Example: `"members[*].data.title"`
+       * - Usage: `jmespath.search(response, jmesPath)`
+       *
+       * Note: The `label`, `value`, and `array` properties are no longer in use.
+       */
+      jmesPath: string;
+    };
+  }
+}
+```
+  </Tab>
+  <Tab>
+```typescript filename="@samchon/openapi" showLineNumbers {7, 42-73, 121-125}
+export namespace OpenApi {
+  export type IJsonSchema =
+    | IJsonSchema.IConstant
+    | IJsonSchema.IBoolean
+    | IJsonSchema.IInteger
+    | IJsonSchema.INumber
+    | IJsonSchema.IString
+    | IJsonSchema.IArray
+    | IJsonSchema.ITuple
+    | IJsonSchema.IObject
+    | IJsonSchema.IReference
+    | IJsonSchema.IOneOf
+    | IJsonSchema.INull
+    | IJsonSchema.IUnknown;
+  export namespace IJsonSchema {
+    export interface IConstant extends __IAttribute {
+      const: boolean | number | string;
+    }
+    export interface IBoolean extends __ISignificant<"boolean"> {
+      default?: boolean;
+    }
+    export interface IInteger extends __ISignificant<"integer"> {
+      /** @type int64 */ default?: number;
+      /** @type int64 */ minimum?: number;
+      /** @type int64 */ maximum?: number;
+      exclusiveMinimum?: boolean;
+      exclusiveMaximum?: boolean;
+      /**
+       * @type uint64
+       * @exclusiveMinimum 0
+       */
+      multipleOf?: number;
+    }
+    export interface INumber extends __ISignificant<"number"> {
+      default?: number;
+      minimum?: number;
+      maximum?: number;
+      exclusiveMinimum?: boolean;
+      exclusiveMaximum?: boolean;
+      /** @exclusiveMinimum 0 */ multipleOf?: number;
+    }
+    export interface IString extends __ISignificant<"string"> {
+      default?: string;
+      format?:
+        | "binary"
+        | "byte"
+        | "password"
+        | "regex"
+        | "uuid"
+        | "email"
+        | "hostname"
+        | "idn-email"
+        | "idn-hostname"
+        | "iri"
+        | "iri-reference"
+        | "ipv4"
+        | "ipv6"
+        | "uri"
+        | "uri-reference"
+        | "uri-template"
+        | "url"
+        | "date-time"
+        | "date"
+        | "time"
+        | "duration"
+        | "json-pointer"
+        | "relative-json-pointer"
+        | (string & {});
+      pattern?: string;
+      contentMediaType?: string;
+      /** @type uint64 */ minLength?: number;
+      /** @type uint64 */ maxLength?: number;
+    }
+
+    export interface IArray<Schema extends IJsonSchema = IJsonSchema>
+      extends __ISignificant<"array"> {
+      items: Schema;
+      uniqueItems?: boolean;
+      /** @type uint64 */ minItems?: number;
+      /** @type uint64 */ maxItems?: number;
+    }
+    export interface ITuple<Schema extends IJsonSchema = IJsonSchema>
+      extends __ISignificant<"array"> {
+      prefixItems: Schema[];
+      additionalItems?: boolean | Schema;
+      uniqueItems?: boolean;
+      /** @type uint64 */ minItems?: number;
+      /** @type uint64 */ maxItems?: number;
+    }
+    export interface IObject<Schema extends IJsonSchema = IJsonSchema>
+      extends __ISignificant<"object"> {
+      properties?: Record<string, Schema>;
+      additionalProperties?: boolean | Schema;
+      required?: string[];
+    }
+
+    export interface IReference<Key = string> extends __IAttribute {
+      $ref: Key;
+    }
+    export interface IOneOf<Schema extends IJsonSchema = IJsonSchema>
+      extends __IAttribute {
+      oneOf: Exclude<Schema, IJsonSchema.IOneOf>[];
+      discriminator?: IOneOf.IDiscriminator;
+    }
+    export namespace IOneOf {
+      export interface IDiscriminator {
+        propertyName: string;
+        mapping?: Record<string, string>;
+      }
+    }
+    export interface INull extends __ISignificant<"null"> {
+      default?: null;
+    }
+    export interface IUnknown extends __IAttribute {
+      type?: undefined;
+    }
+
+    export interface __ISignificant<Type extends string> extends __IAttribute {
+      type: Type;
+    }
+    export interface __IAttribute {
+      title?: string;
+      description?: string;
+      deprecated?: boolean;
+    }
+  }
+}
+```
+  </Tab>
+</Tabs>
+
+"Wrtn Studio Pro" is defining surplus plugin properties to JSON schema for special purposes. 
+
+At first, "Wrtn Studio Pro" has defined two additional properties to the `string` type; `x-wrtn-secret-key` and `x-wrtn-secret-scopes`. When those properties are specified, it means that the target value must be filled with the secret value which satisfies the secret key and scopes.
+
+For example, in the "Wrtn Studio Pro", you can send an email in the chatting room through the G-Mail service. To send an email through the G-Mail service, you need to fill the secret value of the Google manually. Therefore, below G-Mail sending related JSON schema has the `x-wrtn-secret-key` and `x-wrtn-secret-scopes` properties to specify the secret key and scopes.
+
+![Secret plugin example](/images/tech-specs/openapi_plugin_secret_example.png)
+
+```json filename="@wrtnio/connectors/swagger.json" showLineNumbers {36-39}
+{
+  "type": "object",
+  "properties": {
+    "to": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Email address of the receipant."
+    },
+    "subject": {
+      "type": "string",
+      "title": "Title of the email content."
+    },
+    "body": {
+      "type": "string",
+      "title": "Body of the email content.",
+      "description": "Mail content body of the email sending.\n\nThe content must be written in the HTML format. If not, the content body can be broken.\n\nAlso, adjust only the G-Mail adjustable CSS styles.\n\nAt last, please do not write too long content. If the content length is too much long, e-mail sending can be failure."
+    },
+    "cc": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "List of reference email list"
+    },
+    "Bcc": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "List of hidden reference email list"
+    },
+    "secretKey": {
+      "type": "string",
+      "x-wrtn-secret-key": "google",
+      "x-wrtn-secret-scopes": [
+        "https://mail.google.com/"
+      ],
+      "title": "Authentification key for the G-Mail service."
+    }
+  },
+  "required": [
+    "to",
+    "subject",
+    "body",
+    "secretKey"
+  ],
+  "title": "The information for sending an email through the G-Mail service."
+}
+```
+
+Also, "Wrtn Studio Pro" has defined some additional properties to every JSON schema types. The additional properties are `x-wrtn-placeholder` and `x-wrtn-prerequisite`.
+
+The first property `x-wrtn-placeholder` is a property to show a hint label in the input field. For example, when there is a `string` typed JSON schema with `email` format, the `x-wrtn-placeholder` property would be written like "Insert your e-mail address please".
+
+The other property `x-wrtn-prerequisite` is a property indicating the prerequisite API interaction. It means that the prerequisite API should be called befored composing the target value of the JSON schema. `method` and `path` member properties of the `x-wrtn-prerequisite` are the HTTP method and path of the prerequisite API endpoint. The `jmesPath` member property is a JMESPath expression to extract the desired values from the prerequisite API response.
+
+
+
+
+## Operation
+<Tabs items={[
+    "Plugin Properties",
+    "OpenAPI v3.1 (emended)",
+  ]}>
+  <Tab>
+```typescript filename="@wrtnio/synonym" showLineNumbers
+/**
+ * Remote operation info.
+ *
+ * `ISwaggerOperation` represents an Restful API operation provided by the
+ * remote server.
+ */
+export interface ISwaggerOperation extends OpenApi.IOperation<ISwaggerSchema> {
+  /**
+   * Icon URL.
+   *
+   * `x-wrtn-icon` is a property means an icon URL representing the target API.
+   */
+  "x-wrtn-icon"?: string & tags.Format<"uri">;
+}
+```
+  </Tab>
+  <Tab>
+```typescript filename="@samchon/openapi/src/OpenApi.ts" showLineNumbers
+export namespace OpenApi {
+  /**
+   * Remote operation info.
+   *
+   * `OpenApi.IOperation` represents an Restful API operation provided by the
+   * remote server.
+   */
+  export interface IOperation<Schema extends IJsonSchema = IJsonSchema> {
+    /**
+     * Unique string used to identify the operation.
+     */
+    operationId?: string;
+
+    /**
+     * List of parameters that are applicable for this operation.
+     */
+    parameters?: IOperation.IParameter<Schema>[];
+
+    /**
+     * The request body applicable for this operation.
+     */
+    requestBody?: IOperation.IRequestBody<Schema>;
+
+    /**
+     * The list of possible responses as they are returned from executing this
+     * operation. Its key is the HTTP status code, and the value is the metadata of
+     * the response in the HTTP status code.
+     */
+    responses?: Record<string, IOperation.IResponse<Schema>>;
+
+    /**
+     * A list of servers providing this API operation.
+     */
+    servers?: IServer[];
+
+    /**
+     * A short summary of what the operation does.
+     */
+    summary?: string;
+
+    /**
+     * A verbose explanation of the operation behavior.
+     */
+    description?: string;
+
+    /**
+     * List of securities and their scopes that are required for execution.
+     *
+     * When this property be configured, the Restful API operation requires
+     * the matched security value for exection. Its key means security key
+     * matched with {@link OpenApi.IDocument.security}.
+     *
+     * The value means scopes required for the security key when the security
+     * type is {@link OpenApi.ISecurityScheme.IOAuth2}. Otherwise the target
+     * security type is not {@link OpenApi.ISecurityScheme.IOAuth2}, the value
+     * would be empty array.
+     */
+    security?: Record<string, string[]>[];
+
+    /**
+     * Tags for API documentation control.
+     */
+    tags?: string[];
+
+    /**
+     * Flag for indicating this operation is deprecated.
+     */
+    deprecated?: boolean;
+  }
+}
+```
+  </Tab>
+</Tabs>
+
+"Wrtn Studio Pro" is defining plugin property `x-wrtn-icon` to the `OpenApi.IOperatio` object.
+
+It is to show representative icon images for each API operation.
+
+Here is the example operation case shown in the "Wrtn Studio Pro" service.
+
+![Icon plugin example](/images/tech-specs/openapi_plugin_icon_example.png)
+
+
+## Document
+```typescript filename="@samchon/openapi" showLineNumbers {18-21}
+export namespace OpenApi {
+  /**
+   * OpenAPI document.
+   *
+   * `OpenApi.IDocument` represents an OpenAPI document of emended OpenAPI v3.1.
+   *
+   * In other words, `OpenApi.IDocument` is a structure of `swagger.json` file of
+   * OpenAPI v3.1 specification, but a little bit shrinked to remove ambiguous and
+   * duplicated expressions of OpenAPI v3.1 for the convenience and clarity.
+   *
+   * @template Schema JSON schema type
+   * @template Operation HTTP operation type
+   */
+  export interface IDocument<
+    Schema extends IJsonSchema = IJsonSchema,
+    Operation extends IOperation<Schema> = IOperation<Schema>,
+  > {
+    /**
+     * Flag for indicating this document is emended by `@samchon/openapi`.
+     */
+    "x-samchon-emended": true;
+
+    /**
+     * OpenAPI version number.
+     */
+    openapi: `3.1.${number}`;
+
+    /**
+     * List of servers that provide the API.
+     */
+    servers?: IServer[];
+
+    /**
+     * Information about the API.
+     */
+    info?: IDocument.IInfo;
+
+    /**
+     * An object to hold reusable data structures.
+     *
+     * It stores both DTO schemas and security schemes.
+     *
+     * For reference, `nestia` defines every object and alias types as reusable DTO
+     * schemas. The alias type means that defined by `type` keyword in TypeScript.
+     */
+    components: IComponents<Schema>;
+
+    /**
+     * The available paths and operations for the API.
+     *
+     * The 1st key is the path, and the 2nd key is the HTTP method.
+     */
+    paths?: Record<string, IPath<Schema, Operation>>;
+
+    /**
+     * An object to hold Webhooks.
+     *
+     * Its structure is same with {@link paths}, so that the 1st key is the path,
+     * and the 2nd key is the HTTP method.
+     */
+    webhooks?: Record<string, IPath<Schema, Operation>>;
+
+    /**
+     * A declaration of which security mechanisms can be used across the API.
+     *
+     * When this property be configured, it would be overwritten in every API routes.
+     *
+     * For reference, key means the name of security scheme and value means the `scopes`.
+     * The `scopes` can be used only when target security scheme is `oauth2` type,
+     * especially for {@link ISwaggerSecurityScheme.IOAuth2.IFlow.scopes} property.
+     */
+    security?: Record<string, string[]>[];
+
+    /**
+     * List of tag names with description.
+     *
+     * It is possible to omit this property or skip some tag name even if
+     * the tag name is used in the API routes. In that case, the tag name
+     * would be displayed (in Swagger-UI) without description.
+     */
+    tags?: IDocument.ITag[];
+  }
+}
+```
+
+"Wrtn Studio Pro" utilizing emended OpenAPI v3.1 specification has special property on the `OpenApi.IDocument` object. The property is `x-samchon-emended` and it is a flag for indicating this document is emended by `@samchon/openapi`.
+
+If the `x-samchon-emended` is `false` or `undefined`, it means that the document has not been emended yet. In that case, "Wrtn Studio Pro" automatically emends the document by `@samchon/openapi` and sets the `x-samchon-emended` flag to be `true`.

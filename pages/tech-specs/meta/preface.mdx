@@ -1,0 +1,211 @@
+import { Callout } from 'nextra-theme-docs';
+
+## A.I. Chatbot
+```mermaid
+flowchart
+  subgraph "OpenAPI Specification"
+    v20(Swagger v2.0) --upgrades--> emended[["OpenAPI v3.1 (emended)"]]
+    v30(OpenAPI v3.0) --upgrades--> emended
+    v31(OpenAPI v3.1) --emends--> emended
+  end
+  subgraph "Ecosystem"
+    emended --normalizes--> migration[["Migration Schema"]]
+    migration --downgrades--> lfc{{"LLM Function Calling Schema"}}
+    migration --metadata--> compiler{{"Workflow Compiler"}}
+    emended --sales--> marketplace{{"API Marketplace"}}
+  end
+  subgraph "Artificial Intelligence"
+    lfc --executor--> meta[("<b><u>Meta LLM (A.I. Chatbot)</u></b>")]
+    compiler --provider--> meta
+    marketplace -.supplier.-> meta
+    meta --stroyline--> swl(["SWL Language"])
+    swl --compiles--> program[/"Re-usable Workflow Program"\\]
+    meta -.private.- prompt((("System Prompt")))
+    meta -.protocol.- websocket((("WebSocket RPC")))
+  end
+```
+
+"Wrtn Studio Pro" provides an A.I. chatbot service called "Meta LLM".
+
+The "Meta LLM" utilizes [LLM (Large Language Model) function calling](https://platform.openai.com/docs/guides/function-calling), and the functions come from the [API marketplace](/tech-specs/marketplace/preface) sales which is following the [OpenAPI specification](/tech-specs/openapi/preface). Also, when user wants to automate his/her chatting scenario as an automated program, "Wrtn Studio Pro" builds it a program function through the [Workflow Compiler](/tech-specs/workflow/preface) with [SWL language](/tech-specs/swl/preface).
+
+By the way, LLM function calling schema appears similar to the OpenAPI specification at first glance, but in reality the specifications are quite different. In such reason, "Wrtn Studio Pro" has a process of converting OpenAPI to [LLM function calling schema](/tech-specs/meta/schema), and at this time, it goes through an intermediate conversion process called [Migration Schema](/tech-specs/meta/migrate).
+
+Also, "Wrtn Studio Pro" has adopted WebSocket protocol when developing the A.I. chatbot service. If explain the WebSocket protocol related story more detaily, "Wrtn Studio Pro" has adopted the [RPC (Remote Procedure Call)](https://tgrid.com/docs/remote-procedure-call) paradigm. It is a structure in which the client and server participating in the chatbot remotely call the functions provided by each other.
+
+At last, when performing function call execution in the "Meta LLM", "Wrtn Studio Pro" separates the parameter arguments composition to both Humand and LLM sides. It's because some arguments must be composed by Human like file uploading or secret key identification.
+
+<Callout type="info">
+
+**LLM Function Calling**
+
+LLM selects proper function and fill arguments.
+
+In nowadays, most LLM (Large Language Model) like OpenAI are supporting "function calling" feature. The "function calling" means that LLM automatically selects a proper function and compose parameter values from the user's chatting text.
+
+https://platform.openai.com/docs/guides/function-calling
+
+</Callout>
+
+
+
+
+## Migration Schema
+```mermaid
+flowchart
+  v20(Swagger v2.0) --upgrades--> emended[["OpenAPI v3.1 (emended)"]]
+  v30(OpenAPI v3.0) --upgrades--> emended
+  v31(OpenAPI v3.1) --emends--> emended
+  emended --normalizes--> migration[["<b><u>Migration Schema</u></b>"]]
+  migration --downgrades--> lfc{{"LLM Function Calling Schema"}}
+  migration --metadata--> workflow{{"Workflow Compiler"}}
+```
+
+Intermediate structure for LLM function calling schema conversion.
+
+LLM function calling schema is different with OpenAPi specification. Therefore, "Wrtn Studio Pro" must convert the OpenAPI spefification to the LLM function calling schema. However, the conversion process is not direct, but through the intermediate structure called "Migration Schema".
+
+Purpose of the Migration Schema is to normalize parameters and responses of the OpenAPI operation. By providing the normalized definitions close to the RPC (Remote Procedure Call) function, "Wrtn Studio Pro" can safely convert to the LLM function calling schema from the OpenAPI document.
+
+- [`IMigrateDocument`](https://github.com/samchon/openapi/blob/master/src/IMigrateDocument.ts)
+- [`IMigrateRoute`](https://github.com/samchon/openapi/blob/master/src/IMigrateRoute.ts)
+
+
+
+
+## LLM Schema
+```mermaid
+flowchart
+IOpenAiDocument --functions--- IOpenAiFunction
+IOpenAiFunction --references--- IMigrateRoute
+IOpenAiFunction --schema--- IOpenAiSchema
+```
+
+"Wrtn Studio Pro" has defined full specification of the LLM function calling schema.
+
+It has been converted from the OpenAPI specification bypass the migration process. The OpenAI function calling schema forms a RPC (Remote Procedure Call) structure that can be directly executed by the Meta LLM. 
+
+Its type schema information is similar with OpenAPI v3.0 specification, but reference type does not exist. Therefore, if there's a recursive referrence type exists in an OpenAPI operation, the operation cannot be converted to the LLM function calling schema.
+
+Also, `IOpenAiFunction`'s parameters are separated to two parts; Human and LLM. The Human part is composed by the user's input, and the LLM part is composed by the Meta LLM's output. The reason of such separation is, some parameter values must be composed by Human like file uploading or secret key identification.
+
+- [`IOpenAiDocument`](https://github.com/wrtnio/openai-function-schema/blob/main/src/structures/IOpenAiDocument.ts)
+- [`IOpenAiFunction`](https://github.com/wrtnio/openai-function-schema/blob/main/src/structures/IOpenAiFunction.ts)
+- [`IOpenAiSchema`](https://github.com/wrtnio/openai-function-schema/blob/main/src/structures/IOpenAiSchema.ts)
+
+
+
+
+## WebSocket RPC
+```mermaid
+sequenceDiagram
+box Client Application
+  actor User
+  participant Driver as Driver<Listener>
+  participant Connector as Communicator (Client)
+end
+box Server Application
+  participant Acceptor as Communicator (Server)
+  actor Provider
+end
+User->>Driver: 1. calls a function
+Activate User
+Activate Driver
+Driver->>Connector: 2. delivers the function call
+Activate Connector
+Deactivate Driver
+Connector-->>Acceptor: 3. sends a protocolized<br/>network message<br/>meaning a function call
+Deactivate Connector
+Activate Acceptor
+Acceptor->>Provider: 4. calls the function
+Provider->>Acceptor: 5. returns a value
+Acceptor-->>Connector: 6. sends a protocolized<br/>network message<br/>meaning a return value
+Deactivate Acceptor
+Activate Connector
+Connector->>Driver: 7. delivers the return value
+Deactivate Connector
+Activate Driver
+Driver->>User: 8. returns the value
+Deactivate Driver
+Deactivate User
+```
+
+WebSocket protocol with RPC paradigm.
+
+"Wrnt Studio Pro" has adopted WebSocket protocol for the A.I. chatbot service. Also, accepting the WebSocket protocol, "Wrtn Studio Pro" is following the RPC (Remote Procedure Call) paradigm. By the RPC paradigm, the client and server participating in the A.I. chatbot are possible to remotely call the functions provided by each other.
+
+In the business logic level, the Meta LLM WebSocket server is providing `IStudioMetaChatService` interface to the client, so that client can remotely call and get return values from the `IStudioMetaChatService` instance composed by the server. Also, the client is providing `IStudioMetaChatListener` instance and many LLM function call executions are performed with it.
+
+- [RPC (Remote Procedure Call)](https://tgrid.com/docs/remote-procedure-call/)
+- [`IStudioMetaChatService`](/api/interfaces/structures_studio_meta_IStudioMetaChatService.IStudioMetaChatService-1.html)
+- [`IStudioMetaChatListener`](/api/interfaces/structures_studio_meta_IStudioMetaChatListener.IStudioMetaChatListener-1.html)
+
+
+
+
+## Function Call Execution
+```mermaid
+sequenceDiagram
+  box Client Application
+    actor Human
+    participant Listener
+  end
+  box Server Application
+    participant Service
+    actor LLM
+  end
+  Human->>Listener: 1. Start A.I. Chatbot
+  Listener-->>Service: 1.1. Call "Service.initialize()"
+  activate Service
+  Service->>LLM: 1.2. LLM function schemas<br/>from API marketplace
+  Service-->>Listener: 1.3. RPC returns session information
+  deactivate Service
+  Human->>Listener: 2. Typed chatting message<br/>"Send an email to my friend"
+  activate Human
+  Listener-->>Service: 2.1. Call "Service.talk()"
+  Service->>LLM: 2.2. Deliver the client message
+  activate LLM
+  LLM->>Service: 2.3. LLM analyzes the user text<br/>and predicated the message<br/>indicates the function call
+  Service-->>Listener: 2.4. Describe function call plan<br/>with detailed descriptions by calling<br/>"Service.explainFunctionCall()"
+  loop for each function
+    LLM->>Service: 3. Target a function to call
+    activate Service
+    Service->>Listener: 3.1. Deliver the target function<br/>metadata by calling<br/>"Service.selectFunction()"
+    LLM-->>Service: 3.2. Request to fill arguments<br/>of LLM side parameters<br/>by chatting text
+    Service-->>Listener: 3.3. Deliver the request of LLM<br/>to fill arguments of LLM side<br/>parameters with chatting text<br/>by calling "Listener.talk()"
+    Human->>Listener: 3.4. Type proper arguments by text
+    Listener-->>Service: 3.5. Call "Service.talk()"<br/>with chatting text<br/>indicating LLM side paramters
+    alt if Human side parameter exists
+      loop for each parameter composed by Human
+        Service-->>Listener: 3.6 Call "Service.fillArguments()"<br/>requesting client to fill<br/>the Human side parameter
+        activate Listener
+        Listener-->>Human: 3.6.1 Print inspector (UI component)
+        Human->>Listener: 3.6.3. Fill value with inspector
+        Listener-->>Service: 3.6.3. RPC returns the value
+        deactivate Listener
+      end
+    end
+    Service->>LLM: 3.7. Execute the function
+    Service-->>LLM: 3.7.1. Inform return value<br/>to LLM for the next step
+    deactivate LLM
+    Service-->>Listener: 3.7.2. Inform return value<br/>to the client by calling<br/>"Service.completeFunction()"
+    deactivate Service
+    Listener-->>Human: 3.7.3. Print return value viewer
+  end
+  deactivate Human
+```
+
+Function call execution process.
+
+The function call execution is processed by utilizing every skills listed up to now, including WebSocket protocol with RPC (Remote Procedure Call) paradigm and function call arguments filling by both Human and LLM (Large Language Model) sides. 
+
+When the Meta LLM service has been started and it has delivered function calling schemas to the LLM (Large Language Model), the conversation with Human and LLM begins and LLM sometimes selects a function to call, and then the function call execution story begins.
+
+1. User talks something by chatting text.
+2. LLM analyzes the user text content.
+3. LLM selects a function, and server informs it to the client.
+4. LLM requests Human to type the arguments by chatting text
+5. User fills the arguments by chatting text.
+6. Server requests clients to fill the Human side arguments.
+7. Human fills the arguments by UI component (inspector).
+8. Server executes the function and informs the result.

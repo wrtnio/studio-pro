@@ -1,0 +1,1078 @@
+import { Tabs, Tab } from 'nextra-theme-docs';
+
+## Concepts
+"Wrtn Studio Pro" has adopted OpenAPI specification with some emendations.
+
+"Wrtn Studio Pro" is utilizing the OpenAPI v3.1 specification, but as the OpenAPI v3.1 specification has too many ambiguous and duplicated expressions, "Wrtn Studio Pro" has emended the OpenAPI v3.1 specification to remove such ambiguous and duplicated expressions for the convenience and clarity.
+
+Here is the full definitions of every OpenAPI specifications and "Wrtn Studio Pro" utilizing emended OpenAPI v3.1 specification. For reference, if user takes an original OpenAPI v3.1 speicified document without emendation or previous versions than OpenAPI v3.1, "Wrtn Studio Pro" automatically converts it to the emended.
+
+  - [**OpenAPI v3.1 emended**](https://github.com/samchon/openapi/blob/master/src/OpenApi.ts)
+  - [OpenAPI v3.1](https://github.com/samchon/openapi/blob/master/src/OpenApiV3_1.ts)
+  - [OpenAPI v3.0](https://github.com/samchon/openapi/blob/master/src/OpenApiV3.ts)
+  - [Swagger v2.0](https://github.com/samchon/openapi/blob/master/src/SwaggerV2.ts)
+
+
+
+
+## Definitions
+### Document
+```typescript filename="@samchon/openapi" showLineNumbers
+export namespace OpenApi {
+  /**
+   * OpenAPI document.
+   *
+   * `OpenApi.IDocument` represents an OpenAPI document of emended OpenAPI v3.1.
+   *
+   * In other words, `OpenApi.IDocument` is a structure of `swagger.json` file of
+   * OpenAPI v3.1 specification, but a little bit shrinked to remove ambiguous and
+   * duplicated expressions of OpenAPI v3.1 for the convenience and clarity.
+   *
+   * @template Schema JSON schema type
+   * @template Operation HTTP operation type
+   */
+  export interface IDocument<
+    Schema extends IJsonSchema = IJsonSchema,
+    Operation extends IOperation<Schema> = IOperation<Schema>,
+  > {
+    /**
+     * OpenAPI version number.
+     */
+    openapi: `3.1.${number}`;
+
+    /**
+     * List of servers that provide the API.
+     */
+    servers?: IServer[];
+
+    /**
+     * Information about the API.
+     */
+    info?: IDocument.IInfo;
+
+    /**
+     * An object to hold reusable data structures.
+     *
+     * It stores both DTO schemas and security schemes.
+     *
+     * For reference, `nestia` defines every object and alias types as reusable DTO
+     * schemas. The alias type means that defined by `type` keyword in TypeScript.
+     */
+    components: IComponents<Schema>;
+
+    /**
+     * The available paths and operations for the API.
+     *
+     * The 1st key is the path, and the 2nd key is the HTTP method.
+     */
+    paths?: Record<string, IPath<Schema, Operation>>;
+
+    /**
+     * An object to hold Webhooks.
+     *
+     * Its structure is same with {@link paths}, so that the 1st key is the path,
+     * and the 2nd key is the HTTP method.
+     */
+    webhooks?: Record<string, IPath<Schema, Operation>>;
+
+    /**
+     * A declaration of which security mechanisms can be used across the API.
+     *
+     * When this property be configured, it would be overwritten in every API routes.
+     *
+     * For reference, key means the name of security scheme and value means the `scopes`.
+     * The `scopes` can be used only when target security scheme is `oauth2` type,
+     * especially for {@link ISwaggerSecurityScheme.IOAuth2.IFlow.scopes} property.
+     */
+    security?: Record<string, string[]>[];
+
+    /**
+     * List of tag names with description.
+     *
+     * It is possible to omit this property or skip some tag name even if
+     * the tag name is used in the API routes. In that case, the tag name
+     * would be displayed (in Swagger-UI) without description.
+     */
+    tags?: IDocument.ITag[];
+
+    /**
+     * Flag for indicating this document is emended by `@samchon/openapi`.
+     */
+    "x-samchon-emended": true;
+  }
+  export namespace IDocument {
+    /**
+     * Information about the API.
+     */
+    export interface IInfo {
+      /**
+       * The title of the API.
+       */
+      title: string;
+
+      /**
+       * A short summary of the API.
+       */
+      summary?: string;
+
+      /**
+       * A full description of the API.
+       */
+      description?: string;
+
+      /**
+       * A URL to the Terms of Service for the API.
+       */
+      termsOfService?: string;
+
+      /**
+       * The contact information for the exposed API.
+       */
+      contact?: IContact;
+
+      /**
+       * The license information for the exposed API.
+       */
+      license?: ILicense;
+
+      /**
+       * Version of the API.
+       */
+      version: string;
+    }
+
+    /**
+     * OpenAPI tag information.
+     *
+     * It is possible to skip composing this structure, even if some
+     * tag names are regsitered in the API routes ({@link OpenApi.IOperation.tags}).
+     * In that case, the tag name would be displayed in Swagger-UI without
+     * description.
+     *
+     * However, if you want to describe the tag name, you can compose this
+     * structure and describe the tag name in the {@link description} property.
+     */
+    export interface ITag {
+      /**
+       * The name of the tag.
+       */
+      name: string;
+
+      /**
+       * An optional string describing the tag.
+       */
+      description?: string;
+    }
+
+    /**
+     * Contact information for the exposed API.
+     */
+    export interface IContact {
+      /**
+       * The identifying name of the contact person/organization.
+       */
+      name?: string;
+
+      /**
+       * The URL pointing to the contact information.
+       */
+      url?: string;
+
+      /**
+       * The email address of the contact person/organization.
+       *
+       * @format email
+       */
+      email?: string;
+    }
+
+    /**
+     * License information for the exposed API.
+     */
+    export interface ILicense {
+      /**
+       * The license name used for the API.
+       */
+      name: string;
+
+      /**
+       * Identifier for the license used for the API.
+       *
+       * example: MIT
+       */
+      identifier?: string;
+
+      /**
+       * A URL to the license used for the API.
+       */
+      url?: string;
+    }
+  }
+}
+```
+
+In the OpenAPI specification, `document` is the root object of the OpenAPI document.
+
+At first, the `documenet` provides the version of the OpenAPI specification through the `openapi` property. As "Wrtn Studio Pro" has adopted the OpenAPI v3.1 speicification with some emendations, the `openapi` property is always set to `3.1.x`, where `x` is a number. Also, the `documents` contains metata information of the API, such as the title, version, and contact information through the `OpenApi.IDocument.info` property.
+
+At second, the `document` object includes the `path` and `webhooks` properties. Through these `path` and `webhooks` properties and their nested `OpenApi.IOperation` structured objects, `document` defines the API's endpoints (`method` + `path`) and which parameter and request/response body types are required for the endpoint execution. Also, `document` object supports the `tags` property to categorize the API's endpoints, and contains the `components` property storing the reusable data structures, such as DTO schemas and security schemes as named types.
+
+At last, the `document` object includes the `security` property declaring which security mechanisms would be adjusted to every API endpoints.
+
+### Server
+```typescript filename="@samchon/openapi" showLineNumbers {48, 63}
+export namespace OpenApi {
+  /**
+   * The remote server that provides the API.
+   */
+  export interface IServer {
+    /**
+     * A URL to the target host.
+     */
+    url: string;
+
+    /**
+     * An optional string describing the target server.
+     */
+    description?: string;
+
+    /**
+     * A map between a variable name and its value.
+     *
+     * When the server {@link url} is a type of template, this property
+     * would be utilized to fill the template with actual values.
+     */
+    variables?: Record<string, IServer.IVariable>;
+  }
+  export namespace IServer {
+    /**
+     * A variable for the server URL template.
+     */
+    export interface IVariable {
+      /**
+       * Default value to use for substitution.
+       */
+      default: string;
+
+      /**
+       * List of available values for the variable.
+       */
+      enum?: string[];
+
+      /**
+       * An optional description for the server variable.
+       */
+      description?: string;
+    }
+  }
+
+  export interface IDocument {
+    openapi: `3.1.${number}`;
+    servers?: IServer[];
+    info?: IDocument.IInfo;
+    components: IComponents;
+    paths?: Record<string, IPath>;
+    webhooks?: Record<string, IPath>;
+    security?: Record<string, string[]>[];
+    tags?: IDocument.ITag[];
+    "x-samchon-emended": true;
+  }
+
+  export interface IOperation {
+    operationId?: string;
+    parameters?: IOperation.IParameter[];
+    requestBody?: IOperation.IRequestBody;
+    responses?: Record<string, IOperation.IResponse>;
+    servers?: IServer[];
+    summary?: string;
+    description?: string;
+    security?: Record<string, string[]>[];
+    tags?: string[];
+    deprecated?: boolean;
+  }
+}
+```
+
+In the OpenAPI definition, `server` is an object representing the remote server that providing the API.
+
+The `server` object contains the `url` property, which is the URL of the target host. You can compose the actual API endpoints just by concatenating the `server.url` and `path` of the target operation. Sometimes, the `server` provide the additional property `description`, and `variables` to fill the URL template with actual values.
+
+Also, the `server` objects can be defined in both `document.servers` and `operation.servers` properties. If a `server` is defined in the `document.servers` property, it means that the server's `url` and its `variables` (optional) would be applied to every API operations. Otherwise if a server is defined in the `operation.servers` property, it means that the operation is an exceptional case, so that only the operation uses independent server information.
+
+For reference, it is possible to declare multiple `server` instances in both `document.servers` and `operation.servers` properties. Such multiple servers are used for separating real/development/local server addresses in the most cases. Therefore, in the multiple servers case, please read the `description` property carefully to distinguish the server's purpose.
+
+### Operation
+```typescript filename="@samchon/openapi" showLineNumbers
+export namespace OpenApi {
+  /**
+   * Path item.
+   *
+   * `OpenApi.IPath` represents a path item of emended OpenAPI v3.1,
+   * collecting multiple method operations in a single path.
+   */
+  export interface IPath<
+    Schema extends IJsonSchema = IJsonSchema,
+    Operation extends IOperation<Schema> = IOperation<Schema>,
+  > extends Partial<Record<Method, Operation>> {
+    /**
+     * Servers that provide the path operations.
+     */
+    servers?: IServer[];
+
+    /**
+     * Summary of the path.
+     */
+    summary?: string;
+
+    /**
+     * Description of the path.
+     */
+    description?: string;
+  }
+
+  /**
+   * Remote operation info.
+   *
+   * `OpenApi.IOperation` represents an Restful API operation provided by the
+   * remote server.
+   */
+  export interface IOperation<Schema extends IJsonSchema = IJsonSchema> {
+    /**
+     * Unique string used to identify the operation.
+     */
+    operationId?: string;
+
+    /**
+     * List of parameters that are applicable for this operation.
+     */
+    parameters?: IOperation.IParameter<Schema>[];
+
+    /**
+     * The request body applicable for this operation.
+     */
+    requestBody?: IOperation.IRequestBody<Schema>;
+
+    /**
+     * The list of possible responses as they are returned from executing this
+     * operation. Its key is the HTTP status code, and the value is the metadata of
+     * the response in the HTTP status code.
+     */
+    responses?: Record<string, IOperation.IResponse<Schema>>;
+
+    /**
+     * A list of servers providing this API operation.
+     */
+    servers?: IServer[];
+
+    /**
+     * A short summary of what the operation does.
+     */
+    summary?: string;
+
+    /**
+     * A verbose explanation of the operation behavior.
+     */
+    description?: string;
+
+    /**
+     * List of securities and their scopes that are required for execution.
+     *
+     * When this property be configured, the Restful API operation requires
+     * the matched security value for exection. Its key means security key
+     * matched with {@link OpenApi.IDocument.security}.
+     *
+     * The value means scopes required for the security key when the security
+     * type is {@link OpenApi.ISecurityScheme.IOAuth2}. Otherwise the target
+     * security type is not {@link OpenApi.ISecurityScheme.IOAuth2}, the value
+     * would be empty array.
+     */
+    security?: Record<string, string[]>[];
+
+    /**
+     * Tags for API documentation control.
+     */
+    tags?: string[];
+
+    /**
+     * Flag for indicating this operation is deprecated.
+     */
+    deprecated?: boolean;
+  }
+  export namespace IOperation {
+    /**
+     * Parameter of the operation.
+     */
+    export interface IParameter<Schema extends IJsonSchema = IJsonSchema> {
+      /**
+       * Representative name of the parameter.
+       *
+       * In the most case, the `name` is equivalent to parameter variable name.
+       * Therefore, the `name` must be filled with the significant variable name
+       * of the parameter.
+       *
+       * By the way, only when the {@link in} property is `path`, the `name`
+       * can be omitted. In that case, the `name` is automatically deduced from
+       * the URL path's positional template argument analyzing.
+       */
+      name?: string;
+
+      /**
+       * Location of the parameter.
+       *
+       * The `in` property is a string that determines the location of the parameter.
+       *
+       * - `path`: parameter is part of the path of the URL.
+       * - `query`: parameter is part of the query string.
+       * - `header`: parameter is part of the header.
+       * - `cookie`: parameter is part of the cookie.
+       */
+      in: "path" | "query" | "header" | "cookie";
+
+      /**
+       * Type info of the parameter.
+       */
+      schema: Schema;
+
+      /**
+       * Whether the parameter is required for execution or not.
+       *
+       * If the parameter is required, the value must be filled. Otherwise,
+       * it is possible to skip the parameter when executing the APi operation.
+       *
+       * For reference, the `required` property must be always `true` when the
+       * {@link in} property is `path`. Otherwise, the `required` property can
+       * be anything of them; `true`, `false` and `undefined`.
+       */
+      required?: boolean;
+
+      /**
+       * Short title of the parameter.
+       */
+      title?: string;
+
+      /**
+       * Verbose explanation of the parameter.
+       */
+      description?: string;
+
+      /**
+       * Example value of the parameter.
+       */
+      example?: any;
+
+      /**
+       * Collection of example values of the parameter with keys.
+       */
+      examples?: Record<string, IExample>;
+    }
+
+    /**
+     * Request body of the operation.
+     */
+    export interface IRequestBody<Schema extends IJsonSchema = IJsonSchema> {
+      content?: IContent<Schema>;
+      description?: string;
+      required?: boolean;
+      "x-nestia-encrypted"?: boolean;
+    }
+
+    /**
+     * Response of the operation.
+     */
+    export interface IResponse<Schema extends IJsonSchema = IJsonSchema> {
+      headers?: Record<string, IOperation.IParameter<Schema>>;
+      content?: IContent<Schema>;
+      description?: string;
+      "x-nestia-encrypted"?: boolean;
+    }
+
+    /**
+     * List of content types supported in request/response body.
+     */
+    export type IContent<Schema extends IJsonSchema = IJsonSchema> = Partial<
+      Record<ContentType, IMediaType<Schema>>
+    >;
+
+    /**
+     * Media type of a request/response body.
+     */
+    export interface IMediaType<Schema extends IJsonSchema = IJsonSchema> {
+      schema?: Schema;
+      example?: any;
+      examples?: Record<string, IExample>;
+    }
+
+    /**
+     * List of supported content media types.
+     */
+    export type ContentType =
+      | "text/plain"
+      | "application/json"
+      | "application/x-www-form-url-encoded"
+      | "multipart/form-data"
+      | "*/*"
+      | (string & {});
+  }
+}
+```
+
+In the OpenAPI definition, `OpenApi.IOperationn` is an object representing the Restful API function.
+
+It is stored in the `OpenApi.IDocument.paths` property of two-dimensional dictionary structure (`Map<string, Map<string, Operation>>`); the 1st key is the path and the 2nd key is the HTTP method. Also, it sometimes has a `OpenApi.IOperation.servers` property when the operation is provided by another server url.
+
+`OpenApi.IOperation` object contains the descriptive information of the operation, such as `summary` and `description`. The `summary` is a short summary of what the operation does, and the `description` is a verbose explanation of the operation behavior. For reference, those descriptive properties are very important to understand the operation's purpose and behavior to the [LLM (Large Language Model) function calling](/tech-specs/meta/function), so that hope to describe them as detailed as possible.
+
+At last, the `OpenApi.IOperation` object has additional properties `tags` and `deprecated`. The `tags` property is used for API documentation level categorizing, and the `deprecated` property is used for indicating the operation is deprecated or not. When the `deprecated` property be turned on, the operation is still alive, but means to be removed in the future.
+
+### Parameter
+```typescript filename="@samchon/openapi" showLineNumbers {4}
+export namespace OpenApi {
+  export interface IOperation<Schema extends IJsonSchema = IJsonSchema> {
+    operationId?: string;
+    parameters?: IOperation.IParameter<Schema>[];
+    requestBody?: IOperation.IRequestBody<Schema>;
+    responses?: Record<string, IOperation.IResponse<Schema>>;
+    servers?: IServer[];
+    summary?: string;
+    description?: string;
+    security?: Record<string, string[]>[];
+    tags?: string[];
+    deprecated?: boolean;
+  }
+  export namespace IOperation {
+    /**
+     * Parameter of the operation.
+     */
+    export interface IParameter<Schema extends IJsonSchema = IJsonSchema> {
+      /**
+       * Representative name of the parameter.
+       *
+       * In the most case, the `name` is equivalent to parameter variable name.
+       * Therefore, the `name` must be filled with the significant variable name
+       * of the parameter.
+       *
+       * By the way, only when the {@link in} property is `path`, the `name`
+       * can be omitted. In that case, the `name` is automatically deduced from
+       * the URL path's positional template argument analyzing.
+       */
+      name?: string;
+
+      /**
+       * Location of the parameter.
+       *
+       * The `in` property is a string that determines the location of the parameter.
+       *
+       * - `path`: parameter is part of the path of the URL.
+       * - `query`: parameter is part of the query string.
+       * - `header`: parameter is part of the header.
+       * - `cookie`: parameter is part of the cookie.
+       */
+      in: "path" | "query" | "header" | "cookie";
+
+      /**
+       * Type info of the parameter.
+       */
+      schema: Schema;
+
+      /**
+       * Whether the parameter is required for execution or not.
+       *
+       * If the parameter is required, the value must be filled. Otherwise,
+       * it is possible to skip the parameter when executing the APi operation.
+       *
+       * For reference, the `required` property must be always `true` when the
+       * {@link in} property is `path`. Otherwise, the `required` property can
+       * be anything of them; `true`, `false` and `undefined`.
+       */
+      required?: boolean;
+
+      /**
+       * Short title of the parameter.
+       */
+      title?: string;
+
+      /**
+       * Verbose explanation of the parameter.
+       */
+      description?: string;
+
+      /**
+       * Example value of the parameter.
+       */
+      example?: any;
+
+      /**
+       * Collection of example values of the parameter with keys.
+       */
+      examples?: Record<string, IExample>;
+    }
+  }
+}
+```
+
+In the OpenAPI definition, `OpenApi.IOperation.IParameter` is an object representing the parameter of the API operation. For reference, in OpenAPI spec, the word "parameter" does not contain the [request body](#requestresponse-body). It covers only the parameters in the URL "path", "query", "header", and "cookie".
+
+In the `OpenApi.IOperation.IParameter` member properties, `name` property represents a variable name of the parameter, and `in` property means the category of the parameter. Also, if the parameter category (`in`) is "path", the parameter `name` can be optional. In that case, "Wrtn Studio Pro" duduces the parameter `name` through the URL path's positional template argument analyzing.
+
+Type schema information is stored in the `schema` property as an `OpenApi.IJsonSchema` instance, and the `required` property is used for indicating whether the parameter is essential for the API operation execution or not. By the way, if the category (`in`) of the parameter is "path", the `required` property must be always `true`.
+
+At last, the `OpenApi.IOperation.IParameter` object has additional descriptive properties `title` and `description`. The `title` property is a short title of the parameter, and the `description` property is a verbose explanation of the parameter. For reference, those descriptive properties are very important to understand the parameter's purpose and behavior to the [LLM (Large Language Model) function calling](/tech-specs/meta/function), so that hope to describe them as detailed as possible.
+
+### Request/Response Body
+```typescript filename="@samchon/openapi" showLineNumbers {5-6}
+export namespace OpenApi {
+  export interface IOperation<Schema extends IJsonSchema = IJsonSchema> {
+    operationId?: string;
+    parameters?: IOperation.IParameter<Schema>[];
+    requestBody?: IOperation.IRequestBody<Schema>;
+    responses?: Record<string, IOperation.IResponse<Schema>>;
+    servers?: IServer[];
+    summary?: string;
+    description?: string;
+    security?: Record<string, string[]>[];
+    tags?: string[];
+    deprecated?: boolean;
+  }
+  export namespace IOperation {
+    /**
+     * Request body of the operation.
+     */
+    export interface IRequestBody<Schema extends IJsonSchema = IJsonSchema> {
+      content?: IContent<Schema>;
+      description?: string;
+      required?: boolean;
+      "x-nestia-encrypted"?: boolean;
+    }
+
+    /**
+     * Response of the operation.
+     */
+    export interface IResponse<Schema extends IJsonSchema = IJsonSchema> {
+      headers?: Record<string, IOperation.IParameter<Schema>>;
+      content?: IContent<Schema>;
+      description?: string;
+      "x-nestia-encrypted"?: boolean;
+    }
+
+    /**
+     * List of content types supported in request/response body.
+     */
+    export type IContent<Schema extends IJsonSchema = IJsonSchema> = Partial<
+      Record<ContentType, IMediaType<Schema>>
+    >;
+
+    /**
+     * Media type of a request/response body.
+     */
+    export interface IMediaType<Schema extends IJsonSchema = IJsonSchema> {
+      schema?: Schema;
+      example?: any;
+      examples?: Record<string, IExample>;
+    }
+
+    /**
+     * List of supported content media types.
+     */
+    export type ContentType =
+      | "text/plain"
+      | "application/json"
+      | "application/x-www-form-url-encoded"
+      | "multipart/form-data"
+      | "*/*"
+      | (string & {});
+  }
+}
+```
+
+In the OpenAPI specification, `OpenApi.IOperation.IRequestBody` and `OpenApi.IOperation.IResponse` are objects representing the request/response body of the API operation, and they are stored in the `OpenApi.IOperation.requestBody` and `OpenApi.IOperation.responses` properties.
+
+At first, `OpenApi.IOperation.IRequestBody` has three properties; `content`, `description` and `required`. As you know can from the property name, `description` is a verbose explanation of the request body, and `required` is a flag indicating whether the request body is essential for the API operation execution or not. The other `content` property is a dictionary structure of the request body's content types and their media types. In the media type (`OpenApi.IOperation.IMediaType`), the type schema information of the request body is enrolled in the `schema` property.
+
+About the `OpenApi.IOperation.responses` property is a type of dictionary that the key is the HTTP status code and the value is the metadata of the response in the HTTP status code. `OpenApi.IOperation.IResponse` is almost same with the `OpenApi.IOperation.IRequestBody` case, but `OpenApi.IOperation.IResponse` has an additional property `headers` that which header values are responsed from executing the operation.
+
+At last, there are many content types supported in the request/response body, but "Wrtn Studio Pro" handles only the following content types. It is possible to providing the other content types to "Wrtn Studio Pro", but only below types can be executed by [LLM function calling](/tech-specs/meta/function) in the "Wrtn Studio Pro".
+
+  - `text/plain`
+  - `application/json`
+  - `application/x-www-form-url-encoded`
+  - `multipart/form-data`
+
+### Security Scheme
+```typescript filename="@samchon/openapi" showLineNumbers {78, 91, 104}
+export namespace OpenApi {
+  /**
+   * Security scheme of Swagger Documents.
+   *
+   * `OpenApi.ISecurityScheme` is a data structure representing content of
+   * `securitySchemes` in `swagger.json` file. It is composed with 5 types of
+   * security schemes as an union type like below.
+   *
+   * @reference https://swagger.io/specification/#security-scheme-object
+   */
+  export type ISecurityScheme =
+    | ISecurityScheme.IApiKey
+    | ISecurityScheme.IHttpBasic
+    | ISecurityScheme.IHttpBearer
+    | ISecurityScheme.IOAuth2
+    | ISecurityScheme.IOpenId;
+  export namespace ISecurityScheme {
+    /**
+     * Normal API key type.
+     */
+    export interface IApiKey {
+      type: "apiKey";
+      in?: "header" | "query" | "cookie";
+      name?: string;
+      description?: string;
+    }
+
+    /**
+     * HTTP basic authentication type.
+     */
+    export interface IHttpBasic {
+      type: "http";
+      scheme: "basic";
+      description?: string;
+    }
+
+    /**
+     * HTTP bearer authentication type.
+     */
+    export interface IHttpBearer {
+      type: "http";
+      scheme: "bearer";
+      bearerFormat?: string;
+      description?: string;
+    }
+
+    /**
+     * OAuth2 authentication type.
+     */
+    export interface IOAuth2 {
+      type: "oauth2";
+      flows: IOAuth2.IFlowSet;
+      description?: string;
+    }
+    export interface IOpenId {
+      type: "openIdConnect";
+      openIdConnectUrl: string;
+      description?: string;
+    }
+    export namespace IOAuth2 {
+      export interface IFlowSet {
+        authorizationCode?: IFlow;
+        implicit?: Omit<IFlow, "tokenUrl">;
+        password?: Omit<IFlow, "authorizationUrl">;
+        clientCredentials?: Omit<IFlow, "authorizationUrl">;
+      }
+      export interface IFlow {
+        authorizationUrl?: string;
+        tokenUrl?: string;
+        refreshUrl?: string;
+        scopes?: Record<string, string>;
+      }
+    }
+  }
+
+  export interface IComponents<Schema extends IJsonSchema = IJsonSchema> {
+    schemas?: Record<string, Schema>;
+    securitySchemes?: Record<string, ISecurityScheme>;
+  }
+
+  export interface IDocument<
+    Schema extends IJsonSchema = IJsonSchema,
+    Operation extends IOperation<Schema> = IOperation<Schema>,
+  > {
+    openapi: `3.1.${number}`;
+    servers?: IServer[];
+    info?: IDocument.IInfo;
+    components: IComponents<Schema>;
+    paths?: Record<string, IPath<Schema, Operation>>;
+    webhooks?: Record<string, IPath<Schema, Operation>>;
+    security?: Record<string, string[]>[];
+    tags?: IDocument.ITag[];
+    "x-samchon-emended": true;
+  }
+
+  export interface IOperation<Schema extends IJsonSchema = IJsonSchema> {
+    operationId?: string;
+    parameters?: IOperation.IParameter<Schema>[];
+    requestBody?: IOperation.IRequestBody<Schema>;
+    responses?: Record<string, IOperation.IResponse<Schema>>;
+    servers?: IServer[];
+    summary?: string;
+    description?: string;
+    security?: Record<string, string[]>[];
+    tags?: string[];
+    deprecated?: boolean;
+  }
+}
+```
+
+In the OpenAPI definition, `OpenApi.ISecurityScheme` is an union type representing the security scheme of the API. It is placed on the `OpenApi.IComponents.securitySchemes` property, and referenced by the `OpenApi.IDocument.security` and `OpenApi.IOperation.security` properties. 
+
+When `OpenApi.IDocument.security` and `OpenApi.IOperation.security` are referencing the security schemes, its key is the name of the security schema, and the value is the `scopes` required for the security scheme. The `scopes` can be used only when the security scheme is `oauth2` type, especially for the `OpenApi.ISecurityScheme.IOAuth2.IFlow.scopes` property. If the target security scheme is not `oauth2` type, the `scopes` value would be an empty array.
+
+About individual schema types of the `OpenApi.ISecurityScheme`, there are 5 types of security schemes. The first `OpenApi.ISecurityScheme.IApiKey` is a normal API key type, and the second `OpenApi.ISecurityScheme.IHttpBasic` is an HTTP basic authentication type. The third `OpenApi.ISecurityScheme.IHttpBearer` is an HTTP bearer authentication type, and the fourth `OpenApi.ISecurityScheme.IOAuth2` is an OAuth2 authentication type. The last `OpenApi.ISecurityScheme.IOpenId` is an OpenID Connect authentication type.
+
+
+
+
+## Detailed Emendations
+### Document
+```typescript filename="@samchon/openapi" showLineNumbers {10-11, 27-33, 39}
+export namespace OpenApi {
+  export interface IDocument<
+    Schema extends IJsonSchema = IJsonSchema,
+    Operation extends IOperation<Schema> = IOperation<Schema>,
+  > {
+    openapi: `3.1.${number}`;
+    servers?: IServer[];
+    info?: IDocument.IInfo;
+    components: IComponents<Schema>;
+    paths?: Record<string, IPath<Schema, Operation>>;
+    webhooks?: Record<string, IPath<Schema, Operation>>;
+    security?: Record<string, string[]>[];
+    tags?: IDocument.ITag[];
+    "x-samchon-emended": true;
+  }
+  export interface IComponents<Schema extends IJsonSchema = IJsonSchema> {
+    schemas?: Record<string, Schema>;
+    securitySchemes?: Record<string, ISecurityScheme>;
+  }
+}
+
+export namespace OpenApiV3_1 {
+  export interface IDocument {
+    openapi: `3.1.${number}`;
+    servers?: IServer[];
+    info?: IDocument.IInfo;
+    components?: IComponents;
+    paths?: Record<string, IPath>;
+    webhooks?: Record<
+      string,
+      | IJsonSchema.IReference<`#/components/pathItems/${string}`> 
+      | IPath
+    >;
+    security?: Record<string, string[]>[];
+    tags?: IDocument.ITag[];
+  }
+  export interface IComponents {
+    schemas?: Record<string, IJsonSchema>;
+    pathItems?: Record<string, IPath>;
+    responses?: Record<string, IOperation.IResponse>;
+    parameters?: Record<string, IOperation.IParameter>;
+    requestBodies?: Record<string, IOperation.IRequestBody>;
+    securitySchemes?: Record<string, ISecurityScheme>;
+    headers?: Record<string, Omit<IOperation.IParameter, "in">>;
+    examples?: Record<string, IExample>;
+  }
+}
+```
+
+In the original OpenAPI v3.1 specification, the `OpenApiV3_1.IDocument` object has an union value typed dynamic record property `webhooks`. Its values can reference `OpenApiV3_1.IComponents` object or contain the `OpenApiV3_1.IPath` objet directly.
+
+By the way, `OpenApiV3_1.IDocument.paths` property is a little bit different with the `OpenApiV3_1.IDocument` case. Even though its containing value type is exactly equal to the `OpenApiV3_1.IDocument.webhooks` property, the `OpenApiV3_1.IDocument.paths` property is not union typed, it cannot reference `OpenApiV3_1.IComponents` object. Therefore, `OpenApiV3_1.IDocument.webhooks` can reference the `OpenApiV3_1.IComponents` object, but it is not suitable for the reusability.
+
+To resolve the ambiguous expression of the `OpenApiV3_1.IDocument.webhooks` property type, `OpenApi.IDocument` object has been emended to contain the `OpenApiV3_1.IDocument.webhooks` property as a direct `OpenApi.IPath` object. If `OpenApiV3_1.IDocument.paths` was also possible to reference the `OpenApiV3_1.IComponents` object, I may consider to keeping the `OpenApiV3_1.IDocument.webhooks`'s union value type for reusability, but as you can see, it is not.
+
+Anyway, by removing the union typed dynamic record property, the `OpenApi.IDocument` object becomes more clear and concise. The `OpenApi.IDocument` becomes significant root object without referencing to nested, and `OpenApi.IComponents` object is only used for storing the reusable data structures, such as DTO schemas and security schemes.
+
+### Path
+```typescript filename="@samchon/openapi" showLineNumbers {18-22, 29-33}
+export namespace OpenApi {
+  export interface IPath<
+    Schema extends IJsonSchema = IJsonSchema,
+    Operation extends IOperation<Schema> = IOperation<Schema>,
+  > extends Partial<Record<Method, Operation>> {
+    servers?: IServer[];
+    summary?: string;
+    description?: string;
+  }
+  export interface IComponents<Schema extends IJsonSchema = IJsonSchema> {
+    schemas?: Record<string, Schema>;
+    securitySchemes?: Record<string, ISecurityScheme>;
+  }
+}
+
+export namespace OpenApiV3_1 {
+  export interface IPath extends Partial<Record<Method, IOperation>> {
+    parameters?: Array<
+      | IOperation.IParameter
+      | IJsonSchema.IReference<`#/components/headers/${string}`>
+      | IJsonSchema.IReference<`#/components/parameters/${string}`>
+    >;
+    servers?: IServer[];
+    summary?: string;
+    description?: string;
+  }
+  export interface IOperation {
+    operationId?: string;
+    parameters?: Array<
+      | IOperation.IParameter
+      | IJsonSchema.IReference<`#/components/headers/${string}`>
+      | IJsonSchema.IReference<`#/components/parameters/${string}`>
+    >;
+    requestBody?:
+      | IOperation.IRequestBody
+      | IJsonSchema.IReference<`#/components/requestBodies/${string}`>;
+    responses?: Record<
+      string,
+      | IOperation.IResponse
+      | IJsonSchema.IReference<`#/components/responses/${string}`>
+    >;
+    servers?: IServer[];
+    summary?: string;
+    description?: string;
+    security?: Record<string, string[]>[];
+    tags?: string[];
+    deprecated?: boolean;
+  }
+  export interface IComponents {
+    schemas?: Record<string, IJsonSchema>;
+    pathItems?: Record<string, IPath>;
+    responses?: Record<string, IOperation.IResponse>;
+    parameters?: Record<string, IOperation.IParameter>;
+    requestBodies?: Record<string, IOperation.IRequestBody>;
+    securitySchemes?: Record<string, ISecurityScheme>;
+    headers?: Record<string, Omit<IOperation.IParameter, "in">>;
+    examples?: Record<string, IExample>;
+  }
+}
+```
+
+In the original OpenAPI v3.1 specification, the `OpenApiV3_1.IPath` object can contain `parameters` property, which can be applied to all operations belonged to the path. If both `OpenApiV3_1.IPath` and belonged `OpenApiV3_1.IOperation` objects have their own `parameters` properties, the `OpenApiV3_1.IPath`'s parameters would be attached to in front of the operation's parameters.
+
+As `OpenApiV3_1.IPath.parameters` property is such ambiguous and duplicated with the `OpenApiV3_1.IOperation.parameters` property, "Wrtn Studio Pro" removes the `OpenApi.IPath.parameters` property and move it to the children `OpenApi.IOperation`'s `parameters` property.
+
+By removing the `OpenApiV3_1.IPath.parameters` property, the `OpenApi.IPath` object comes only a collection of operations with the same path value. Also, only `OpenApi.IOperation` object handles the properties about the operation subject, the "Wrtn Studio Pro" emended OpenAPI specification becomes more clear and concise. 
+
+### Operation
+```typescript filename="@samchon/openapi" showLineNumbers {4-6, 23-35}
+export namespace OpenApi {
+  export interface IOperation<Schema extends IJsonSchema = IJsonSchema> {
+    operationId?: string;
+    parameters?: IOperation.IParameter<Schema>[];
+    requestBody?: IOperation.IRequestBody<Schema>;
+    responses?: Record<string, IOperation.IResponse<Schema>>;
+    servers?: IServer[];
+    summary?: string;
+    description?: string;
+    security?: Record<string, string[]>[];
+    tags?: string[];
+    deprecated?: boolean;
+  }
+  export interface IComponents<Schema extends IJsonSchema = IJsonSchema> {
+    schemas?: Record<string, Schema>;
+    securitySchemes?: Record<string, ISecurityScheme>;
+  }
+}
+
+export namespace OpenApiV3_1 {
+  export interface IOperation {
+    operationId?: string;
+    parameters?: Array<
+      | IOperation.IParameter
+      | IJsonSchema.IReference<`#/components/headers/${string}`>
+      | IJsonSchema.IReference<`#/components/parameters/${string}`>
+    >;
+    requestBody?:
+      | IOperation.IRequestBody
+      | IJsonSchema.IReference<`#/components/requestBodies/${string}`>;
+    responses?: Record<
+      string,
+      | IOperation.IResponse
+      | IJsonSchema.IReference<`#/components/responses/${string}`>
+    >;
+    servers?: IServer[];
+    summary?: string;
+    description?: string;
+    security?: Record<string, string[]>[];
+    tags?: string[];
+    deprecated?: boolean;
+  }
+  export interface IComponents {
+    schemas?: Record<string, IJsonSchema>;
+    pathItems?: Record<string, IPath>;
+    responses?: Record<string, IOperation.IResponse>;
+    parameters?: Record<string, IOperation.IParameter>;
+    requestBodies?: Record<string, IOperation.IRequestBody>;
+    securitySchemes?: Record<string, ISecurityScheme>;
+    headers?: Record<string, Omit<IOperation.IParameter, "in">>;
+    examples?: Record<string, IExample>;
+  }
+}
+```
+
+In the original OpenAPI v3.1 specification, the `OpenApiV3_1.IOperation` object has many union typed properties which references `OpenApiV3_1.IComponents` or contains metadata information by itself; `parameters`, `requestBody` and `responses`.
+
+However, as "Wrtn Studio Pro" tends to avoid indirect referencing to the `components` object for the convenience and clarity, the `OpenApi.IOperation` object's union typed properties has emended to containn the metadata information by itself.
+
+By revmoing such indirect referencing, the `OpenApi.IOperation` object becomes more clear and concise. It always contains the metadata information of operation by itself, and the `OpenApi.IComponents` object is only used for storing the reusable data structures, such as DTO schemas and security schemes.
+
+### Parameter
+```typescript filename="@samchon/openapi" showLineNumbers {11, 35-38, 49}
+export namespace OpenApi {
+  export namespace IOperation {
+    export interface IParameter<Schema extends IJsonSchema = IJsonSchema> {
+      name?: string;
+      in: "path" | "query" | "header" | "cookie";
+      schema: Schema;
+      required?: boolean;
+      title?: string;
+      description?: string;
+      example?: any;
+      examples?: Record<string, IExample>;
+    }
+  }
+  export interface IComponents<Schema extends IJsonSchema = IJsonSchema> {
+    schemas?: Record<string, Schema>;
+    securitySchemes?: Record<string, ISecurityScheme>;
+  }
+  export interface IExample {
+    summary?: string;
+    description?: string;
+    value?: any;
+    externalValue?: string;
+  }
+}
+
+export namespace OpenApiV3_1 {
+  export namespace IOperation {
+    export interface IParameter {
+      name?: string;
+      in: "path" | "query" | "header" | "cookie";
+      schema: IJsonSchema;
+      required?: boolean;
+      description?: string;
+      example?: any;
+      examples?: Record<
+        string,
+        IExample | IJsonSchema.IReference<`#/components/examples/${string}`>
+      >;
+    }
+  }
+  export interface IComponents {
+    schemas?: Record<string, IJsonSchema>;
+    pathItems?: Record<string, IPath>;
+    responses?: Record<string, IOperation.IResponse>;
+    parameters?: Record<string, IOperation.IParameter>;
+    requestBodies?: Record<string, IOperation.IRequestBody>;
+    securitySchemes?: Record<string, ISecurityScheme>;
+    headers?: Record<string, Omit<IOperation.IParameter, "in">>;
+    examples?: Record<string, IExample>;
+  }
+  export interface IExample {
+    summary?: string;
+    description?: string;
+    value?: any;
+    externalValue?: string;
+  }
+}
+```
+
+In the original OpenAPI v3.1 specification, the `OpenApiV3_1.IOperation.IParameter` has `examples` property, and the `examples` has an union typed value which references `OpenApiV3_1.IComponents` or contains the example value by itself.
+
+However, as "Wrtn Studio Pro" tends to avoid indirect referencing to the `components` object for the convenience and clarity, the `OpenApi.IOperation.IParameter.examples` has emended to only contain the example values by itself, instead of referencing the `components` object.
+
+By revmoing such indirect referencing, the `OpenApi.IOperation.IParameter` object becomes more clear and concise. It always contains the metadata information of operation by itself, and the `OpenApi.IComponents` object is only used for storing the reusable data structures, such as DTO schemas and security schemes.

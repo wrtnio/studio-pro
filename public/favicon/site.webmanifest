@@ -1,0 +1,19 @@
+{
+  "name": "",
+  "short_name": "",
+  "icons": [
+    {
+      "src": "/studio-pro/android-chrome-180x180.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/studio-pro/android-chrome-1024x1024.png",
+      "sizes": "1024x1024",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff",
+  "display": "standalone"
+}
