@@ -18,7 +18,7 @@ flowchart
     lfc --executor--> meta[("<b><u>Meta LLM (A.I. Chatbot)</u></b>")]
     compiler --provider--> meta
     marketplace -.supplier.-> meta
-    meta --stroyline--> swl(["SWL Language"])
+    meta --storyline--> swl(["SWL Language"])
     swl --compiles--> program[/"Re-usable Workflow Program"\\]
     meta -.private.- prompt((("System Prompt")))
     meta -.protocol.- websocket((("WebSocket RPC")))
