@@ -19,7 +19,7 @@ const config: DocsThemeConfig = {
       >
         Wrtn Technologies
       </span>
-      <span>Studio Documents</span>
+      <span>Studio Pro Documents</span>
     </>
   ),
   footer: {
@@ -32,6 +32,10 @@ const config: DocsThemeConfig = {
       </span>
     ),
   },
+  project: {
+    link: "https://github.com/wrtnio/studio",
+  },
+  docsRepositoryBase: "https://github.com/wrtnio/studio/blob/main",
   useNextSeoProps() {
     return {
       defaultTitle: "Studio Documents",
