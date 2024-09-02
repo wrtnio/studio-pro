@@ -35,7 +35,7 @@ const config: DocsThemeConfig = {
   // project: {
   //   link: "https://github.com/wrtnio/studio",
   // },
-  docsRepositoryBase: "https://github.com/wrtnio/studio/blob/main",
+  docsRepositoryBase: "https://github.com/wrtnio/studio-pro",
   useNextSeoProps() {
     return {
       defaultTitle: "Studio Documents",
