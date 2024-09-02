@@ -32,9 +32,9 @@ const config: DocsThemeConfig = {
       </span>
     ),
   },
-  project: {
-    link: "https://github.com/wrtnio/studio",
-  },
+  // project: {
+  //   link: "https://github.com/wrtnio/studio",
+  // },
   docsRepositoryBase: "https://github.com/wrtnio/studio/blob/main",
   useNextSeoProps() {
     return {
