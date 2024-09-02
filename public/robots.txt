@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://wrtn.dev/wrtn/studio-docs
+
+# Sitemaps
+Sitemap: https://wrtn.dev/wrtn/studio-docs/sitemap.xml
