@@ -28,6 +28,6 @@ const nextConfig = {
       destination: "/swagger/index.html",
     },
   ],
-  distDir: "out/public",
+  distDir: "out",
 };
 module.exports = nextConfig;
