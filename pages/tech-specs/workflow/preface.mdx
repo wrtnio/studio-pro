@@ -35,7 +35,21 @@ For reference, the workflow program also belongs to the ecosystem of the "Wrtn S
 
 
 ## Workflow Schema
-![AST Diagram](/images/tech-specs/workflow-ast-diagram.png)
+```mermaid
+flowchart
+  if["if statement"] --condition expression--> condition(["<"])
+  condition --"left expression"--> x(["x"])
+  condition --"right expression"--> y(["y"])
+  if --"when true"--> then["block statement"]
+  then --"first item"--> statement["expression statement"]
+  then --"second item"--> returnOne["return statement"]
+  returnOne --"expression"--> one(["numeric literal 1"])
+  statement --"call expression"--> caller(["function call"])
+  caller --"arguments"--> expressions("{...expressions}")
+  if --"when false"--> else["block statement"]
+  else --"items"--> returnZero["return statement"]
+  returnZero --"expression" --> zero(["numeric literal 0"])
+```
 
 Compiler + Repository.
 
