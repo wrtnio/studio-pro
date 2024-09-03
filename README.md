@@ -14,7 +14,7 @@ Here is list of address of the Studio Pro Documents.
 
 ## Setup
 ```bash
-git clone https://github.com/wrtnio/studio
+git clone https://github.com/wrtnio/studio-pro
 cd studio
 npm install
 npm run dev
