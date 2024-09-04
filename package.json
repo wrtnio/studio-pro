@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "build": "rimraf .next && rimraf .out && next-sitemap && next build",
+    "build": "rimraf .next && rimraf .out && next build && next-sitemap",
     "deploy": "node build/deploy",
     "dev": "next-sitemap && next dev"
   },
