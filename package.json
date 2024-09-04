@@ -4,9 +4,9 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "build": "rimraf .next && rimraf .out && next build && next-sitemap",
+    "build": "rimraf .next && rimraf .out && next build && node build/sitemap",
     "deploy": "node build/deploy",
-    "dev": "next-sitemap && next dev"
+    "dev": "next dev"
   },
   "keywords": [],
   "author": "Samchon",
