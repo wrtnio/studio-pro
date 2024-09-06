@@ -1,8 +1,10 @@
 {
-  "index": {
-    "title": "🙋🏻‍♂️ Introduction",
-    "theme": {
-      "sidebar": false
-    }
-  }
+  "-- features": {
+    "type": "separator",
+    "title": "📖 Introduction"
+  },
+  "index": "Overview",
+  "core-elements": "Core Elements",
+  "getting-started": "Getting Started",
+  "use-cases": "Use Cases"
 }
