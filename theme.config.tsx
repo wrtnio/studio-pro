@@ -17,9 +17,8 @@ const config: DocsThemeConfig = {
           paddingRight: 10,
         }}
       >
-        Wrtn Technologies
+        Studio Pro
       </span>
-      <span>Studio Pro Documents</span>
     </>
   ),
   footer: {
