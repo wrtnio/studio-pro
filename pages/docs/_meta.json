@@ -1,16 +1,8 @@
 {
-  "index": "🙋🏻‍♂️ Introduction",
-  "-- features": {
-    "type": "separator",
-    "title": "📖 Features"
-  },
-  "membership": "Membership",
-  "meta": "Meta LLM (A.I. Chat)",
-  "marketplace": "API Marketplace",
-  "workflow": "Workflow",
-  "repository": "Repository",
-  "-- appendix": {
-    "type": "separator",
-    "title": "🔗 Appendix"
+  "index": {
+    "title": "🙋🏻‍♂️ Introduction",
+    "theme": {
+      "sidebar": false
+    }
   }
 }
