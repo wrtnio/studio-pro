@@ -27,6 +27,10 @@ const nextConfig = {
       source: "/swagger",
       destination: "/swagger/index.html",
     },
+    {
+      source: "/early-adopter-program",
+      destination: "/early-adopter-program.html",
+    },
   ],
   distDir: "out",
 };
