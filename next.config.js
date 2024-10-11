@@ -27,9 +27,12 @@ const nextConfig = {
       source: "/swagger",
       destination: "/swagger/index.html",
     },
+  ],
+  redirects: async () => [
     {
       source: "/early-adopter-program",
-      destination: "/early-adopter-program.html",
+      destination: "https://wrtn.ai/studio",
+      permanent: true,
     },
   ],
   distDir: "out",
