@@ -11,7 +11,7 @@
     }
   ],
   "info": {
-    "version": "0.31.0",
+    "version": "0.32.0",
     "title": "@wrtn/hub-backend",
     "description": "Hub Backend",
     "license": {
@@ -5268,7 +5268,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/IBlockWord.IRequest"
+                "$ref": "#/components/schemas/IBlockWord.IAllRequest"
               }
             }
           },
@@ -5280,7 +5280,45 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/IBlockWord"
+                  "$ref": "#/components/schemas/IBlockWord.IAll"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/hub/customers/commons/blockwords/find/batch": {
+      "patch": {
+        "summary": "Harmful word checker (batch)",
+        "description": "Harmful word checker (batch).\n\nBefore registering a sale, check the details, tags, etc., to see\nif they contain harmful words.\n\nThe check result tells you whether harmful words are included and, if so,\nwhich words are included. This API now supports batch processing by allowing\nmultiple sentences to be passed in an array for harmful word checks.\nThe API calls `/api/v1/blockword/find/batch`, an API of CDS (Common Data Service),\nto check harmful words. The check result can be accessed through {@link IBlockWord.IBatch}\nprovided by CDS.\n\nhttps://cds-py.dev.wrtn.club/docs#/%5Blive%5D%20blockword/find_blockword_api_v1_blockword_find_batch_post",
+        "tags": [
+          "commons"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "description": "Array of content to check",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IBlockWord.IBatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Check result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IBlockWord.IBatch"
                 }
               }
             }
@@ -25485,6 +25523,238 @@
         ]
       }
     },
+    "/studio/customers/repositories/{accountCode}/{repositoryCode}/commits/{commitId}/workflows/{workflowId}/sandboxes": {
+      "put": {
+        "summary": "Emplace a secret sandbox",
+        "description": "Emplace a secret sandbox.\n\nEmplace a secret sandbox for prerequisite execution\nfrom the frontend application of the editor side.",
+        "tags": [
+          "Workflow"
+        ],
+        "parameters": [
+          {
+            "name": "accountCode",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": " Belonged account's {@link IStudioAccount.code }"
+          },
+          {
+            "name": "repositoryCode",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": " Belonged repository's {@link IStudioRepository.code }"
+          },
+          {
+            "name": "commitId",
+            "in": "path",
+            "schema": {
+              "oneOf": [
+                {
+                  "const": "latest"
+                },
+                {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              ]
+            },
+            "required": true,
+            "description": " Target commit's {@link IStudioRepositoryCommit.id }"
+          },
+          {
+            "name": "workflowId",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "description": " Target workflow's {@link IStudioWorkflow.id }"
+          }
+        ],
+        "requestBody": {
+          "description": "Request info containing target secret key and value",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IStudioAccountSecretValueSandbox.IEmplace"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Emplaced sandbox record",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IStudioAccountSecretValueSandbox"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/studio/customers/repositories/{accountCode}/{repositoryCode}/commits/{commitId}/workflows/{workflowId}/sandboxes/{id}": {
+      "delete": {
+        "summary": "Erase a sandbox record",
+        "description": "Erase a sandbox record.\n\nErase a sandbox record emplaced from the target workflow.",
+        "tags": [
+          "Workflow"
+        ],
+        "parameters": [
+          {
+            "name": "accountCode",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": " Belonged account's {@link IStudioAccount.code }"
+          },
+          {
+            "name": "repositoryCode",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": " Belonged repository's {@link IStudioRepository.code }"
+          },
+          {
+            "name": "commitId",
+            "in": "path",
+            "schema": {
+              "oneOf": [
+                {
+                  "const": "latest"
+                },
+                {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              ]
+            },
+            "required": true,
+            "description": " Target commit's {@link IStudioRepositoryCommit.id }"
+          },
+          {
+            "name": "workflowId",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "description": " Target workflow's {@link IStudioWorkflow.id }"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "description": " Target sandbox' {@link IStudioSecretValueSandbox.id }"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {}
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/studio/customers/repositories/{accountCode}/{repositoryCode}/commits/{commitId}/workflows/{workflowId}/sandboxes/clear": {
+      "delete": {
+        "summary": "Clear every sandboxes",
+        "description": "Clear every sandboxes.\n\nClear every sandbox records emplaced from the target workflow.",
+        "tags": [
+          "Workflow"
+        ],
+        "parameters": [
+          {
+            "name": "accountCode",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": " Belonged account's {@link IStudioAccount.code }"
+          },
+          {
+            "name": "repositoryCode",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": " Belonged repository's {@link IStudioRepository.code }"
+          },
+          {
+            "name": "commitId",
+            "in": "path",
+            "schema": {
+              "oneOf": [
+                {
+                  "const": "latest"
+                },
+                {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              ]
+            },
+            "required": true,
+            "description": " Target commit's {@link IStudioRepositoryCommit.id }"
+          },
+          {
+            "name": "workflowId",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "description": " Target workflow's {@link IStudioWorkflow.id }"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {}
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/studio/customers/repositories/{accountCode}/{repositoryCode}/commits/workflows/standalone": {
       "post": {
         "summary": "Create a workflow standalone",
@@ -25756,6 +26026,389 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/IStudioWorkflowStandalone"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/studio/customers/repositories/{accountCode}/{repositoryCode}/commits/{commitId}/workflows/{workflowId}/scripts": {
+      "patch": {
+        "summary": "Retrieve the script connector list",
+        "description": "Retrieve the script connector list.\n\nFrom the {@link IStudioWorkflow workflow document} and\n{@link IStudioRepository repository} and {@link IStudioRepositoryCommit commit},\nall available {@link IStudioWorkflowScriptConnector script connectors} are\nretrieved. The returned script connectors are {@link IPage paging} processed and\nfiltered according to the search conditions.\n\nNote that a workflow document is also a type of function, so a workflow document\nis also a type of (script) connector function from the perspective of another\nworkflow document. Therefore, if you want to exclude the current workflow document\nfrom the returned script connectors, you can filter them using\n{@link IStudioWorkflowScriptConnector.IRequest.workflow_id}.",
+        "tags": [
+          "Workflow"
+        ],
+        "parameters": [
+          {
+            "name": "accountCode",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": " {@link IStudioAccount.code } of the account to which it belongs"
+          },
+          {
+            "name": "repositoryCode",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": " {@link IStudioRepository.code } of the repository to which it belongs"
+          },
+          {
+            "name": "commitId",
+            "in": "path",
+            "schema": {
+              "oneOf": [
+                {
+                  "const": "latest"
+                },
+                {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              ]
+            },
+            "required": true,
+            "description": " {@link IStudioRepositoryCommit.id } of the commit to which it belongs"
+          },
+          {
+            "name": "workflowId",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "description": " {@link IStudioWorkflow.id } of the workflow to which it belongs"
+          }
+        ],
+        "requestBody": {
+          "description": "Page and search request information",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IStudioWorkflowScriptConnector.IRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "List of paged script connectors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IPageIStudioWorkflowScriptConnector"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/studio/customers/repositories/{accountCode}/{repositoryCode}/commits/{commitId}/workflows/{workflowId}/scripts/get": {
+      "patch": {
+        "summary": "Lookup script connectors individually",
+        "description": "Lookup script connectors individually.\n\nFrom the {@link IStudioWorkflow workflow document} and\n{@link IStudioRepository repository} and {@link IStudioRepositoryCommit commit},\nspecify the target script function (or other workflow document) individually,\nand retrieve its {@link IStudioWorkflowScriptConnector script connector}\ninformation.\n\nNote that other workflow documents in the same repository can also be imported\nas script connectors because workflow documents are also a type of function and\ncan be `imported`.",
+        "tags": [
+          "Workflow"
+        ],
+        "parameters": [
+          {
+            "name": "accountCode",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": " {@link IStudioAccount.code } of the account to which it belongs"
+          },
+          {
+            "name": "repositoryCode",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": " {@link IStudioRepository.code } of the repository to which it belongs"
+          },
+          {
+            "name": "commitId",
+            "in": "path",
+            "schema": {
+              "oneOf": [
+                {
+                  "const": "latest"
+                },
+                {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              ]
+            },
+            "required": true,
+            "description": " {@link IStudioRepositoryCommit.id } of the commit to which it belongs"
+          },
+          {
+            "name": "workflowId",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "description": " {@link IStudioWorkflow.id } of the workflow to which it belongs"
+          }
+        ],
+        "requestBody": {
+          "description": "Identifier of the target script function or workflow document",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IStudioWorkflowScriptConnector.ICreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Script connector information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IStudioWorkflowScriptConnector"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/studio/customers/repositories/{accountCode}/{repositoryCode}/commits/{commitId}/workflows/{workflowId}/swaggers": {
+      "patch": {
+        "summary": "Bulk query of Swagger documents registered in the workflow document",
+        "description": "Bulk query of Swagger documents registered in the workflow document.\n\nBatch query all Swagger documents registered in\n{@link IStudioWorkflow workflow document}. The returned Swagger document is\nprocessed with {@link IPage paging}, and is wrapped in the form of\n{@link IStudioWorkflowSwagger} for binding with\n{@link IStudioWorkflowSwaggerConnector connector}.\n\nNote that this information is also recorded in the workflow main document\n({@link IStudioWorkflowData.swaggers}), so when querying a workflow document,\nyou do not need to call this API directly. Use it only when you want to query\nthe Swagger documents used there, separately from other workflow documents.",
+        "tags": [
+          "Workflow"
+        ],
+        "parameters": [
+          {
+            "name": "accountCode",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": " {@link IStudioAccount.code } of the account to which it belongs"
+          },
+          {
+            "name": "repositoryCode",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": " {@link IStudioRepository.code } of the repository to which it belongs"
+          },
+          {
+            "name": "commitId",
+            "in": "path",
+            "schema": {
+              "oneOf": [
+                {
+                  "const": "latest"
+                },
+                {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              ]
+            },
+            "required": true,
+            "description": " {@link IStudioRepositoryCommit.id } of the commit to which it belongs"
+          },
+          {
+            "name": "workflowId",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "description": " {@link IStudioWorkflow.id } of the workflow to which it belongs"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "a paged list of Swagger connectors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IPageIStudioWorkflowSwagger"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "summary": "Convert Swagger document to connector structure",
+        "description": "Convert Swagger document to connector structure.\n\nConvert {@link ISwagger Swagger document} to a connector structure that can\nbe used in the current {@link IStudioWorkflow workflow document}.\n\nThe returned object {@link IStudioWorkflowSwagger} contains the original\nSwagger information, and a list of\n{@link IStudioWorkflowSwaggerConnector connectors}.\n\nEach connector matches the original Swagger's {@link ISwaggerOperation} based\non the endpoint's path and method.",
+        "tags": [
+          "Workflow"
+        ],
+        "parameters": [
+          {
+            "name": "accountCode",
+            "in": "path",
+            "schema": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "required": true,
+            "description": " {@link IStudioAccount.code } of the account to which it belongs"
+          },
+          {
+            "name": "repositoryCode",
+            "in": "path",
+            "schema": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "required": true,
+            "description": " {@link IStudioRepository.code } of the repository to which it belongs"
+          },
+          {
+            "name": "commitId",
+            "in": "path",
+            "schema": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "const": "latest"
+                },
+                {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              ]
+            },
+            "required": true,
+            "description": " {@link IStudioRepositoryCommit.id } of the commit to which it belongs"
+          },
+          {
+            "name": "workflowId",
+            "in": "path",
+            "schema": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              ]
+            },
+            "required": true,
+            "description": " {@link IStudioWorkflow.id } of the workflow to which it belongs"
+          }
+        ],
+        "requestBody": {
+          "description": "Information needed to create a Swagger connector, a combination of Swagger data + identifier UUID",
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/IStudioWorkflowSwagger.IGoodCreate"
+                  },
+                  {
+                    "$ref": "#/components/schemas/IStudioWorkflowSwagger.IManualCreate"
+                  },
+                  {
+                    "$ref": "#/components/schemas/IStudioWorkflowSwagger.ILinkCreate"
+                  }
+                ],
+                "discriminator": {
+                  "propertyName": "source",
+                  "mapping": {
+                    "good": "#/components/schemas/IStudioWorkflowSwagger.IGoodCreate",
+                    "manual": "#/components/schemas/IStudioWorkflowSwagger.IManualCreate",
+                    "link": "#/components/schemas/IStudioWorkflowSwagger.ILinkCreate"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Swagger and connector information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/IStudioWorkflowSwagger.ILinkSwagger"
+                    },
+                    {
+                      "$ref": "#/components/schemas/IStudioWorkflowSwagger.IManualSwagger"
+                    },
+                    {
+                      "$ref": "#/components/schemas/IStudioWorkflowSwagger.IGoodSwagger"
+                    }
+                  ],
+                  "discriminator": {
+                    "propertyName": "source",
+                    "mapping": {
+                      "link": "#/components/schemas/IStudioWorkflowSwagger.ILinkSwagger",
+                      "manual": "#/components/schemas/IStudioWorkflowSwagger.IManualSwagger",
+                      "good": "#/components/schemas/IStudioWorkflowSwagger.IGoodSwagger"
+                    }
+                  }
                 }
               }
             }
@@ -26162,389 +26815,6 @@
             "description": "",
             "content": {
               "application/json": {}
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      }
-    },
-    "/studio/customers/repositories/{accountCode}/{repositoryCode}/commits/{commitId}/workflows/{workflowId}/scripts": {
-      "patch": {
-        "summary": "Retrieve the script connector list",
-        "description": "Retrieve the script connector list.\n\nFrom the {@link IStudioWorkflow workflow document} and\n{@link IStudioRepository repository} and {@link IStudioRepositoryCommit commit},\nall available {@link IStudioWorkflowScriptConnector script connectors} are\nretrieved. The returned script connectors are {@link IPage paging} processed and\nfiltered according to the search conditions.\n\nNote that a workflow document is also a type of function, so a workflow document\nis also a type of (script) connector function from the perspective of another\nworkflow document. Therefore, if you want to exclude the current workflow document\nfrom the returned script connectors, you can filter them using\n{@link IStudioWorkflowScriptConnector.IRequest.workflow_id}.",
-        "tags": [
-          "Workflow"
-        ],
-        "parameters": [
-          {
-            "name": "accountCode",
-            "in": "path",
-            "schema": {
-              "type": "string"
-            },
-            "required": true,
-            "description": " {@link IStudioAccount.code } of the account to which it belongs"
-          },
-          {
-            "name": "repositoryCode",
-            "in": "path",
-            "schema": {
-              "type": "string"
-            },
-            "required": true,
-            "description": " {@link IStudioRepository.code } of the repository to which it belongs"
-          },
-          {
-            "name": "commitId",
-            "in": "path",
-            "schema": {
-              "oneOf": [
-                {
-                  "const": "latest"
-                },
-                {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              ]
-            },
-            "required": true,
-            "description": " {@link IStudioRepositoryCommit.id } of the commit to which it belongs"
-          },
-          {
-            "name": "workflowId",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "required": true,
-            "description": " {@link IStudioWorkflow.id } of the workflow to which it belongs"
-          }
-        ],
-        "requestBody": {
-          "description": "Page and search request information",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/IStudioWorkflowScriptConnector.IRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "List of paged script connectors",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IPageIStudioWorkflowScriptConnector"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      }
-    },
-    "/studio/customers/repositories/{accountCode}/{repositoryCode}/commits/{commitId}/workflows/{workflowId}/scripts/get": {
-      "patch": {
-        "summary": "Lookup script connectors individually",
-        "description": "Lookup script connectors individually.\n\nFrom the {@link IStudioWorkflow workflow document} and\n{@link IStudioRepository repository} and {@link IStudioRepositoryCommit commit},\nspecify the target script function (or other workflow document) individually,\nand retrieve its {@link IStudioWorkflowScriptConnector script connector}\ninformation.\n\nNote that other workflow documents in the same repository can also be imported\nas script connectors because workflow documents are also a type of function and\ncan be `imported`.",
-        "tags": [
-          "Workflow"
-        ],
-        "parameters": [
-          {
-            "name": "accountCode",
-            "in": "path",
-            "schema": {
-              "type": "string"
-            },
-            "required": true,
-            "description": " {@link IStudioAccount.code } of the account to which it belongs"
-          },
-          {
-            "name": "repositoryCode",
-            "in": "path",
-            "schema": {
-              "type": "string"
-            },
-            "required": true,
-            "description": " {@link IStudioRepository.code } of the repository to which it belongs"
-          },
-          {
-            "name": "commitId",
-            "in": "path",
-            "schema": {
-              "oneOf": [
-                {
-                  "const": "latest"
-                },
-                {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              ]
-            },
-            "required": true,
-            "description": " {@link IStudioRepositoryCommit.id } of the commit to which it belongs"
-          },
-          {
-            "name": "workflowId",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "required": true,
-            "description": " {@link IStudioWorkflow.id } of the workflow to which it belongs"
-          }
-        ],
-        "requestBody": {
-          "description": "Identifier of the target script function or workflow document",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/IStudioWorkflowScriptConnector.ICreate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Script connector information",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IStudioWorkflowScriptConnector"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      }
-    },
-    "/studio/customers/repositories/{accountCode}/{repositoryCode}/commits/{commitId}/workflows/{workflowId}/swaggers": {
-      "patch": {
-        "summary": "Bulk query of Swagger documents registered in the workflow document",
-        "description": "Bulk query of Swagger documents registered in the workflow document.\n\nBatch query all Swagger documents registered in\n{@link IStudioWorkflow workflow document}. The returned Swagger document is\nprocessed with {@link IPage paging}, and is wrapped in the form of\n{@link IStudioWorkflowSwagger} for binding with\n{@link IStudioWorkflowSwaggerConnector connector}.\n\nNote that this information is also recorded in the workflow main document\n({@link IStudioWorkflowData.swaggers}), so when querying a workflow document,\nyou do not need to call this API directly. Use it only when you want to query\nthe Swagger documents used there, separately from other workflow documents.",
-        "tags": [
-          "Workflow"
-        ],
-        "parameters": [
-          {
-            "name": "accountCode",
-            "in": "path",
-            "schema": {
-              "type": "string"
-            },
-            "required": true,
-            "description": " {@link IStudioAccount.code } of the account to which it belongs"
-          },
-          {
-            "name": "repositoryCode",
-            "in": "path",
-            "schema": {
-              "type": "string"
-            },
-            "required": true,
-            "description": " {@link IStudioRepository.code } of the repository to which it belongs"
-          },
-          {
-            "name": "commitId",
-            "in": "path",
-            "schema": {
-              "oneOf": [
-                {
-                  "const": "latest"
-                },
-                {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              ]
-            },
-            "required": true,
-            "description": " {@link IStudioRepositoryCommit.id } of the commit to which it belongs"
-          },
-          {
-            "name": "workflowId",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "required": true,
-            "description": " {@link IStudioWorkflow.id } of the workflow to which it belongs"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "a paged list of Swagger connectors",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IPageIStudioWorkflowSwagger"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      },
-      "post": {
-        "summary": "Convert Swagger document to connector structure",
-        "description": "Convert Swagger document to connector structure.\n\nConvert {@link ISwagger Swagger document} to a connector structure that can\nbe used in the current {@link IStudioWorkflow workflow document}.\n\nThe returned object {@link IStudioWorkflowSwagger} contains the original\nSwagger information, and a list of\n{@link IStudioWorkflowSwaggerConnector connectors}.\n\nEach connector matches the original Swagger's {@link ISwaggerOperation} based\non the endpoint's path and method.",
-        "tags": [
-          "Workflow"
-        ],
-        "parameters": [
-          {
-            "name": "accountCode",
-            "in": "path",
-            "schema": {
-              "oneOf": [
-                {
-                  "type": "null"
-                },
-                {
-                  "type": "string"
-                }
-              ]
-            },
-            "required": true,
-            "description": " {@link IStudioAccount.code } of the account to which it belongs"
-          },
-          {
-            "name": "repositoryCode",
-            "in": "path",
-            "schema": {
-              "oneOf": [
-                {
-                  "type": "null"
-                },
-                {
-                  "type": "string"
-                }
-              ]
-            },
-            "required": true,
-            "description": " {@link IStudioRepository.code } of the repository to which it belongs"
-          },
-          {
-            "name": "commitId",
-            "in": "path",
-            "schema": {
-              "oneOf": [
-                {
-                  "type": "null"
-                },
-                {
-                  "const": "latest"
-                },
-                {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              ]
-            },
-            "required": true,
-            "description": " {@link IStudioRepositoryCommit.id } of the commit to which it belongs"
-          },
-          {
-            "name": "workflowId",
-            "in": "path",
-            "schema": {
-              "oneOf": [
-                {
-                  "type": "null"
-                },
-                {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              ]
-            },
-            "required": true,
-            "description": " {@link IStudioWorkflow.id } of the workflow to which it belongs"
-          }
-        ],
-        "requestBody": {
-          "description": "Information needed to create a Swagger connector, a combination of Swagger data + identifier UUID",
-          "content": {
-            "application/json": {
-              "schema": {
-                "oneOf": [
-                  {
-                    "$ref": "#/components/schemas/IStudioWorkflowSwagger.IGoodCreate"
-                  },
-                  {
-                    "$ref": "#/components/schemas/IStudioWorkflowSwagger.IManualCreate"
-                  },
-                  {
-                    "$ref": "#/components/schemas/IStudioWorkflowSwagger.ILinkCreate"
-                  }
-                ],
-                "discriminator": {
-                  "propertyName": "source",
-                  "mapping": {
-                    "good": "#/components/schemas/IStudioWorkflowSwagger.IGoodCreate",
-                    "manual": "#/components/schemas/IStudioWorkflowSwagger.IManualCreate",
-                    "link": "#/components/schemas/IStudioWorkflowSwagger.ILinkCreate"
-                  }
-                }
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "description": "Swagger and connector information",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "oneOf": [
-                    {
-                      "$ref": "#/components/schemas/IStudioWorkflowSwagger.ILinkSwagger"
-                    },
-                    {
-                      "$ref": "#/components/schemas/IStudioWorkflowSwagger.IManualSwagger"
-                    },
-                    {
-                      "$ref": "#/components/schemas/IStudioWorkflowSwagger.IGoodSwagger"
-                    }
-                  ],
-                  "discriminator": {
-                    "propertyName": "source",
-                    "mapping": {
-                      "link": "#/components/schemas/IStudioWorkflowSwagger.ILinkSwagger",
-                      "manual": "#/components/schemas/IStudioWorkflowSwagger.IManualSwagger",
-                      "good": "#/components/schemas/IStudioWorkflowSwagger.IGoodSwagger"
-                    }
-                  }
-                }
-              }
             }
           }
         },
@@ -31571,20 +31841,10 @@
             "title": "WRTN user interest list",
             "description": "WRTN user interest list."
           },
-          "number": {
-            "type": "string",
-            "title": "WRTN user phone number",
-            "description": "WRTN user phone number."
-          },
           "provider": {
             "type": "string",
             "title": "WRTN User Account Provider",
             "description": "WRTN User Account Provider.\n\nex) \"google\", \"kakao\", \"naver\""
-          },
-          "company": {
-            "type": "string",
-            "title": "WRTN User Company",
-            "description": "WRTN User Company."
           },
           "job": {
             "type": "array",
@@ -31644,11 +31904,6 @@
             },
             "title": "Job information",
             "description": "Job information."
-          },
-          "birthYear": {
-            "type": "number",
-            "title": "Year of birth",
-            "description": "Year of birth."
           },
           "gender": {
             "oneOf": [
@@ -31857,7 +32112,14 @@
             "description": "Customer information.\n\nThis system manages customers by connection unit.\n\nThat is, connection information for the current administrator member."
           },
           "citizen": {
-            "$ref": "#/components/schemas/IHubCitizen",
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/IHubCitizen"
+              }
+            ],
             "title": "Citizen authentication information",
             "description": "Citizen authentication information.\n\nAdministrators must complete citizen authentication."
           },
@@ -46830,6 +47092,18 @@
             "title": "Whether the parameters are keyworded or not",
             "description": "Whether the parameters are keyworded or not.\n\nIf this property value is `true`, length of the\n{@link IHttpLlmApplication.IFunction.parameters} is always 1, and type of\nthe pararameter is always {@link ILlmSchema.IObject} type.\n\nOtherwise, the parameters would be multiple, and the sequence of the parameters\nare following below rules.\n\n```typescript\n// KEYWORD TRUE\n{\n  ...pathParameters,\n  query,\n  body,\n}\n\n// KEYWORD FALSE\n[\n  ...pathParameters,\n  ...(query ? [query] : []),\n  ...(body ? [body] : []),\n]\n```"
           },
+          "recursive": {
+            "oneOf": [
+              {
+                "const": false
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Whether to allow recursive types or not",
+            "description": "Whether to allow recursive types or not.\n\nIf allow, then how many times to repeat the recursive types.\n\nBy the way, if the model is \"chatgpt\", the recursive types are always\nallowed without any limitation, due to it supports the reference type."
+          },
           "separate": {
             "type": "null",
             "title": "Separator function for the parameters",
@@ -46838,6 +47112,7 @@
         },
         "required": [
           "keyword",
+          "recursive",
           "separate"
         ],
         "description": "Options for composing the LLM application."
@@ -53179,20 +53454,10 @@
                 "title": "WRTN user interest list",
                 "description": "WRTN user interest list."
               },
-              "number": {
-                "type": "string",
-                "title": "WRTN user phone number",
-                "description": "WRTN user phone number."
-              },
               "provider": {
                 "type": "string",
                 "title": "WRTN User Account Provider",
                 "description": "WRTN User Account Provider.\n\nex) \"google\", \"kakao\", \"naver\""
-              },
-              "company": {
-                "type": "string",
-                "title": "WRTN User Company",
-                "description": "WRTN User Company."
               },
               "job": {
                 "type": "array",
@@ -53209,11 +53474,6 @@
                 },
                 "title": "WRTN User Purpose",
                 "description": "WRTN User Purpose."
-              },
-              "deviceToken": {
-                "type": "string",
-                "title": "WRTN User Device Token",
-                "description": "WRTN User Device Token."
               }
             },
             "required": [
@@ -53344,7 +53604,7 @@
           "extension"
         ]
       },
-      "IBlockWord": {
+      "IBlockWord.IAll": {
         "type": "object",
         "properties": {
           "blockwords": {
@@ -53388,11 +53648,63 @@
           "end"
         ]
       },
-      "IBlockWord.IRequest": {
+      "IBlockWord.IAllRequest": {
         "type": "object",
         "properties": {
           "text": {
             "type": "string"
+          },
+          "language": {
+            "oneOf": [
+              {
+                "const": "ko"
+              },
+              {
+                "const": "jp"
+              }
+            ]
+          },
+          "filterType": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "const": "BLOCKWORD_REGEX"
+              }
+            ],
+            "additionalItems": false
+          }
+        },
+        "required": [
+          "text",
+          "language",
+          "filterType"
+        ]
+      },
+      "IBlockWord.IBatch": {
+        "type": "object",
+        "properties": {
+          "blockwords": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/IBlockWord.IContent"
+              }
+            }
+          }
+        },
+        "required": [
+          "blockwords"
+        ]
+      },
+      "IBlockWord.IBatchRequest": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "language": {
             "oneOf": [
@@ -84883,6 +85195,24 @@
         ],
         "description": "Editing information for the repository's distribution.\n\nOnly documents and search tags can be edited. If you want to change commit history\nor version names, you can't, so delete them and create new ones."
       },
+      "IStudioAccountSecretValueSandbox.IEmplace": {
+        "type": "object",
+        "properties": {
+          "secret_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "value_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "secret_id",
+          "value_id"
+        ],
+        "description": "Emplace request info.\n\nEmplace request info of secret value for a specific record unit.\n\nCurrently, the manual sandbox emplacing is used only in the\nworkflow editor. In other words, it is used from the workflow\nsnapshot entity."
+      },
       "IStudioWorkflowStandalone.ICreate": {
         "type": "object",
         "properties": {
@@ -85007,6 +85337,140 @@
           }
         },
         "description": "Construct a type with the properties of T except for those in type K."
+      },
+      "IPageIStudioWorkflowScriptConnector": {
+        "type": "object",
+        "properties": {
+          "pagination": {
+            "$ref": "#/components/schemas/IPage.IPagination",
+            "title": "Page information",
+            "description": "Page information."
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IStudioWorkflowScriptConnector"
+            },
+            "title": "List of records",
+            "description": "List of records."
+          }
+        },
+        "required": [
+          "pagination",
+          "data"
+        ],
+        "description": "A page.\n\nCollection of records with pagination indformation."
+      },
+      "IStudioWorkflowScriptConnector.IRequest": {
+        "type": "object",
+        "properties": {
+          "workflow_id": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "string",
+                "format": "uuid"
+              }
+            ],
+            "title": "{@link IStudioWorkflow.id} of the current workflow document",
+            "description": "{@link IStudioWorkflow.id} of the current workflow document.\n\nThis is to prevent the current workflow document from being exposed repeatedly\nwhile querying script connectors. Since the workflow document is also treated\nas a function, it can be used as a script connector from another workflow document.\n\nOf course, if this value is set to `null`, there is no duplication check.\nYou will avoid the above situation yourself."
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page number",
+            "description": "Page number."
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limitation of records per a page",
+            "description": "Limitation of records per a page."
+          }
+        },
+        "required": [
+          "workflow_id"
+        ],
+        "description": "Page search and request information."
+      },
+      "IStudioWorkflowScriptConnector.ICreate": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path to the target bucket",
+            "description": "Path to the target bucket.\n\nRepresents the reference target bucket as a relative path relative\nto the current workflow."
+          },
+          "accessor": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/IAstElementAccessExpression"
+              },
+              {
+                "$ref": "#/components/schemas/IAstPropertyAccessExpression"
+              },
+              {
+                "$ref": "#/components/schemas/IAstIdentifier"
+              }
+            ],
+            "discriminator": {
+              "propertyName": "type",
+              "mapping": {
+                "ElementAccessExpression": "#/components/schemas/IAstElementAccessExpression",
+                "PropertyAccessExpression": "#/components/schemas/IAstPropertyAccessExpression",
+                "Identifier": "#/components/schemas/IAstIdentifier"
+              }
+            },
+            "title": "Accessor for the target function",
+            "description": "Accessor for the target function."
+          }
+        },
+        "required": [
+          "path",
+          "accessor"
+        ],
+        "description": "Input information for the script connector in the workflow."
+      },
+      "IPageIStudioWorkflowSwagger": {
+        "type": "object",
+        "properties": {
+          "pagination": {
+            "$ref": "#/components/schemas/IPage.IPagination",
+            "title": "Page information",
+            "description": "Page information."
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/IStudioWorkflowSwagger.ILinkSwagger"
+                },
+                {
+                  "$ref": "#/components/schemas/IStudioWorkflowSwagger.IManualSwagger"
+                },
+                {
+                  "$ref": "#/components/schemas/IStudioWorkflowSwagger.IGoodSwagger"
+                }
+              ],
+              "discriminator": {
+                "propertyName": "source",
+                "mapping": {
+                  "link": "#/components/schemas/IStudioWorkflowSwagger.ILinkSwagger",
+                  "manual": "#/components/schemas/IStudioWorkflowSwagger.IManualSwagger",
+                  "good": "#/components/schemas/IStudioWorkflowSwagger.IGoodSwagger"
+                }
+              }
+            },
+            "title": "List of records",
+            "description": "List of records."
+          }
+        },
+        "required": [
+          "pagination",
+          "data"
+        ],
+        "description": "A page.\n\nCollection of records with pagination indformation."
       },
       "IPageIStudioWorkflowTemporary.ISummary": {
         "type": "object",
@@ -85148,140 +85612,6 @@
           "document"
         ],
         "description": "Temporary storage of input information."
-      },
-      "IPageIStudioWorkflowScriptConnector": {
-        "type": "object",
-        "properties": {
-          "pagination": {
-            "$ref": "#/components/schemas/IPage.IPagination",
-            "title": "Page information",
-            "description": "Page information."
-          },
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/IStudioWorkflowScriptConnector"
-            },
-            "title": "List of records",
-            "description": "List of records."
-          }
-        },
-        "required": [
-          "pagination",
-          "data"
-        ],
-        "description": "A page.\n\nCollection of records with pagination indformation."
-      },
-      "IStudioWorkflowScriptConnector.IRequest": {
-        "type": "object",
-        "properties": {
-          "workflow_id": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "type": "string",
-                "format": "uuid"
-              }
-            ],
-            "title": "{@link IStudioWorkflow.id} of the current workflow document",
-            "description": "{@link IStudioWorkflow.id} of the current workflow document.\n\nThis is to prevent the current workflow document from being exposed repeatedly\nwhile querying script connectors. Since the workflow document is also treated\nas a function, it can be used as a script connector from another workflow document.\n\nOf course, if this value is set to `null`, there is no duplication check.\nYou will avoid the above situation yourself."
-          },
-          "page": {
-            "type": "integer",
-            "title": "Page number",
-            "description": "Page number."
-          },
-          "limit": {
-            "type": "integer",
-            "title": "Limitation of records per a page",
-            "description": "Limitation of records per a page."
-          }
-        },
-        "required": [
-          "workflow_id"
-        ],
-        "description": "Page search and request information."
-      },
-      "IStudioWorkflowScriptConnector.ICreate": {
-        "type": "object",
-        "properties": {
-          "path": {
-            "type": "string",
-            "title": "Path to the target bucket",
-            "description": "Path to the target bucket.\n\nRepresents the reference target bucket as a relative path relative\nto the current workflow."
-          },
-          "accessor": {
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/IAstElementAccessExpression"
-              },
-              {
-                "$ref": "#/components/schemas/IAstPropertyAccessExpression"
-              },
-              {
-                "$ref": "#/components/schemas/IAstIdentifier"
-              }
-            ],
-            "discriminator": {
-              "propertyName": "type",
-              "mapping": {
-                "ElementAccessExpression": "#/components/schemas/IAstElementAccessExpression",
-                "PropertyAccessExpression": "#/components/schemas/IAstPropertyAccessExpression",
-                "Identifier": "#/components/schemas/IAstIdentifier"
-              }
-            },
-            "title": "Accessor for the target function",
-            "description": "Accessor for the target function."
-          }
-        },
-        "required": [
-          "path",
-          "accessor"
-        ],
-        "description": "Input information for the script connector in the workflow."
-      },
-      "IPageIStudioWorkflowSwagger": {
-        "type": "object",
-        "properties": {
-          "pagination": {
-            "$ref": "#/components/schemas/IPage.IPagination",
-            "title": "Page information",
-            "description": "Page information."
-          },
-          "data": {
-            "type": "array",
-            "items": {
-              "oneOf": [
-                {
-                  "$ref": "#/components/schemas/IStudioWorkflowSwagger.ILinkSwagger"
-                },
-                {
-                  "$ref": "#/components/schemas/IStudioWorkflowSwagger.IManualSwagger"
-                },
-                {
-                  "$ref": "#/components/schemas/IStudioWorkflowSwagger.IGoodSwagger"
-                }
-              ],
-              "discriminator": {
-                "propertyName": "source",
-                "mapping": {
-                  "link": "#/components/schemas/IStudioWorkflowSwagger.ILinkSwagger",
-                  "manual": "#/components/schemas/IStudioWorkflowSwagger.IManualSwagger",
-                  "good": "#/components/schemas/IStudioWorkflowSwagger.IGoodSwagger"
-                }
-              }
-            },
-            "title": "List of records",
-            "description": "List of records."
-          }
-        },
-        "required": [
-          "pagination",
-          "data"
-        ],
-        "description": "A page.\n\nCollection of records with pagination indformation."
       },
       "IPageIStudioShelfCommitWorkflow.ISummary": {
         "type": "object",
