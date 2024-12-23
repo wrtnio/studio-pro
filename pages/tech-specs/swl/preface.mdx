@@ -1,0 +1,221 @@
+# SWL (Strict Workflow Language)
+
+
+SWL is an imperative programming language designed for WRTN's Meta Agent to effectively create and manage workflows.
+The code above is then converted to IR code and passed to the backend.
+That's all - it performs no additional operations.
+
+## IR code
+
+IR code means Intermediate Representation code.
+This IR code can always convert typescript code.
+
+## Design Goals
+
+1. **Simplicity**: Express complex workflows clearly and concisely
+2. **Reliability**: Detect errors at compile time
+3. **Extensibility**: Support integration with various external services
+4. **Reusability**: Modular workflow components
+
+## Core Features
+
+1. **Basic Syntax**
+
+   - Variable declaration and assignment
+   - Control flow statements
+   - Function definitions and calls
+
+2. **Type System**
+
+   - Primitive types (string, number, boolean)
+   - Composite types (objects, arrays)
+   - Custom type definitions
+
+3. **Connector System**
+
+   - External service integration
+   - API call abstraction
+   - Error handling
+
+4. **Workflow Control**
+   - Sequential execution
+   - Parallel processing
+   - Error recovery
+
+## Warning
+
+The example code above may not work currently.
+The syntax used in this compiler is changed countless times to write code that AI understands well.
+That's why there is IR code.
+
+## Example
+
+```swlm
+DEFINE WORKFLOW main (
+    name string DEFAULT "John",
+    age integer DEFAULT 25,
+    is_student boolean DEFAULT true,
+    preferences object{ "theme": string, "notifications"?: boolean } DEFAULT { "theme": "dark" }
+) RETURNS object{ "status": string, "data": any } BEGIN
+    # Demonstrate variable declarations with different types
+    DECLARE simple_bool boolean = true;
+    DECLARE simple_int integer = 42;
+    DECLARE simple_str string = "Hello, " + name;
+    simple_str + simple_int;
+    DECLARE simple_arr array<integer> = [1, 2, 3, 4, 5];
+    DECLARE simple_tuple tuple[string, integer, boolean] = ["test", 123, false];
+    DECLARE simple_record record<string, any> = { "key1": "value1", "key2": 42 };
+    DECLARE simple_obj object{ "name": string, "value": integer | boolean } = { "name": "test", "value": true };
+
+    # Demonstrate array operations
+    DECLARE numbers array<integer> = [1, 2, 3];
+    DECLARE more_numbers array<integer> = [4, 5, 6];
+    DECLARE combined_numbers array<integer> = numbers + more_numbers;
+
+    # Demonstrate tuple operations
+    DECLARE tup1 tuple[integer, string] = [1, "hello"];
+    DECLARE tup2 tuple[boolean] = [true];
+    DECLARE combined_tuple tuple[integer, string, boolean] = tup1 + tup2;
+
+    # Demonstrate record/object operations
+    DECLARE obj1 object{ "a": integer, "b": string } = { "a": 1, "b": "hello" };
+    DECLARE obj2 object{ "c": boolean } = { "c": true };
+    DECLARE combined_obj object{ "a": integer, "b": string, "c": boolean } = obj1 + obj2;
+    SET obj2 = combined_obj;
+    DECLARE obj3 object{ "a": integer, "b": string, "c"?: boolean } = combined_obj;
+    # SET combined_obj = obj3; # error
+
+
+    # Demonstrate optional type
+    DECLARE a null | string = "";
+    DECLARE b string = a DEFAULT "default";
+    # Demonstrate method calls
+    DECLARE test_array array<integer> = [1, 2, 3];
+    DECLARE array_length integer = test_array.len();
+
+    IF test_array.contains(2) THEN
+        test_array.push(4);
+        test_array.sort();
+        test_array.reverse();
+    END_IF;
+
+    # Demonstrate string operations
+    DECLARE test_str string = "Hello, World!";
+    DECLARE str_length integer = test_str.len();
+    DECLARE contains_hello boolean = test_str.contains("Hello");
+    DECLARE first_char string = test_str.get(0);
+
+    # Demonstrate FOR loop with arrays
+    DECLARE sum integer = 0;
+    FOR num IN simple_arr DO
+        IF (num % 2) == 0 THEN
+            CONTINUE;
+        END_IF;
+        SET sum = sum + num;
+        IF sum > 10 THEN
+            BREAK;
+        END_IF;
+    END_FOR;
+
+    # Demonstrate WHILE loop
+    DECLARE counter integer = 0;
+    WHILE counter < 5 DO
+        SET counter = counter + 1;
+        IF (counter % 2) == 0 THEN
+            CONTINUE;
+        END_IF;
+
+        DECLARE obj object{ "query": string } = { "query": "Counter: " + (counter AS string)};
+        DECLARE result = CALL "post:/connector/kakao-map/search" WITH obj;
+    END_WHILE;
+
+    # Demonstrate type conversion
+    DECLARE str_num string = "42";
+    DECLARE converted_num integer = str_num AS integer;
+    DECLARE back_to_str string = converted_num AS string;
+
+    # Demonstrate unary operators
+    DECLARE negative_num integer = -simple_int;
+    DECLARE bool_not boolean = !simple_bool;
+
+    # Demonstrate binary operators
+    DECLARE calc_result integer = (simple_int * 2) + (10 / 2);
+    DECLARE logic_result boolean = simple_bool && true || false;
+    DECLARE comparison_result boolean = simple_int > 0 && simple_int <= 100;
+
+    # Demonstrate record manipulation
+    DECLARE user_record record<string, any> = { };
+    user_record.insert("name", name);
+    user_record.insert("age", age);
+
+    # Test string.contains()
+    DECLARE test_string string = "Hello World";
+    DECLARE str_contains boolean = test_string.contains("World");
+
+    # Test array.contains()
+    DECLARE test_array array<integer> = [1, 2, 3, 4, 5];
+    DECLARE arr_contains boolean = test_array.contains(3);
+
+    # Test tuple.contains()
+    DECLARE test_tuple tuple[integer, string, boolean] = [1, "test", true];
+    DECLARE tuple_contains boolean = test_tuple.contains("test");
+
+    # Test record.contains()
+    DECLARE test_record record<string, any> = { "name": "John", "age": 30 };
+    DECLARE record_contains boolean = test_record.contains("age");
+
+    # Test object.contains()
+    DECLARE test_object object{ "id": integer, "name": string } = { "id": 1, "name": "John" };
+    DECLARE obj_contains boolean = test_object.contains("name");
+
+    # Final complex condition
+    IF age >= 18 && is_student THEN
+        IF preferences.contains("notifications") THEN
+            DECLARE obj object{ "query": string } = { "query": "Welcome student!" };
+            CALL "post:/connector/kakao-map/search" WITH obj;
+        ELSE IF preferences["theme"] == "dark" THEN
+            DECLARE obj object{ "query": string } = { "query": "dark" };
+            CALL "post:/connector/kakao-map/search" WITH obj;
+        ELSE
+            DECLARE obj object{ "query": string } = { "query": "light" };
+            CALL "post:/connector/kakao-map/search" WITH obj;
+        END_IF;
+    END_IF;
+
+    # Optional type casting
+    DECLARE opt_str object{ "value"?: string } = { "value": "hello" };
+    DECLARE str string = (opt_str["value"] AS string) + " world";
+
+    # Union operate
+    DECLARE union1 boolean | string | integer = "hello";
+    IF union1 != null THEN
+        SET union1 = true;
+    END_IF;
+    DECLARE union2 string | integer = union1 AS string;
+    SET union1 = union2;
+
+    DECLARE optional_str null | string = "";
+    IF (optional_str AS string) != "" THEN
+        SET union1 = 1;
+    END_IF;
+
+    DECLARE test_array array<any> | null = null;
+    (test_array DEFAULT []).len();
+
+    # Return final result
+    RETURN {
+        "status": "success",
+        "data": {
+            "name": name,
+            "age": age,
+            "is_student": is_student,
+            "preferences": preferences,
+            "calculations": {
+                "sum": sum,
+                "array_length": array_length,
+                "string_length": str_length
+            }
+        }
+    };
+END;
+```
