@@ -3,7 +3,10 @@ import { DocsThemeConfig } from "nextra-theme-docs";
 
 const config: DocsThemeConfig = {
   logo: () => (
-    <>
+    <span
+      onClick={(e) => e.preventDefault()}
+      style={{ display: "flex", alignItems: "center", cursor: "default" }}
+    >
       <img
         src="/studio-pro/favicon/android-chrome-180x180.png"
         width={32}
@@ -19,7 +22,7 @@ const config: DocsThemeConfig = {
       >
         Studio Pro
       </span>
-    </>
+    </span>
   ),
   footer: {
     text: () => (
