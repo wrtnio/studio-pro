@@ -16,20 +16,12 @@ const nextConfig = {
   basePath: "/studio-pro",
   rewrites: async () => [
     {
-      source: "/",
-      destination: "/index.html",
-    },
-    {
       source: "/api",
       destination: "/api/index.html",
     },
     {
       source: "/swagger",
       destination: "/swagger/index.html",
-    },
-    {
-      source: "/early-adopter-program",
-      destination: "/early-adopter-program.html",
     },
   ],
   distDir: "out",
